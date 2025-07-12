@@ -23,7 +23,11 @@ const genderOptions: GenderOption[] = [
   { id: 'male', label: 'Male', value: 'male' },
   { id: 'female', label: 'Female', value: 'female' },
   { id: 'non-binary', label: 'Non-binary', value: 'non-binary' },
-  { id: 'prefer-not-to-say', label: 'Prefer not to say', value: 'prefer-not-to-say' },
+  {
+    id: 'prefer-not-to-say',
+    label: 'Prefer not to say',
+    value: 'prefer-not-to-say',
+  },
 ];
 
 const ageGroups: AgeGroup[] = [
@@ -38,32 +42,35 @@ const ageGroups: AgeGroup[] = [
 export default function AboutScreen() {
   const router = useRouter();
   const { user, updateUser } = useUser();
-  
-  const [selectedGender, setSelectedGender] = useState<string>('prefer-not-to-say');
+
+  const [selectedGender, setSelectedGender] =
+    useState<string>('prefer-not-to-say');
   const [selectedAge, setSelectedAge] = useState<string>('25-34');
   const [isForSelf, setIsForSelf] = useState<boolean>(true);
-  
+
   const handleContinue = async () => {
     try {
-      const selectedGenderObj = genderOptions.find(g => g.id === selectedGender);
-      const selectedAgeObj = ageGroups.find(a => a.id === selectedAge);
-      
+      const selectedGenderObj = genderOptions.find(
+        (g) => g.id === selectedGender
+      );
+      const selectedAgeObj = ageGroups.find((a) => a.id === selectedAge);
+
       if (selectedGenderObj && selectedAgeObj) {
         await updateUser({
           gender: selectedGenderObj.value,
           age: selectedAgeObj.value,
-          isForSelf,
+          is_for_self: isForSelf,
         });
       }
-      
+
       router.push('/(onboarding)/concerns');
     } catch (error) {
       console.error('Failed to update user:', error);
     }
   };
-  
+
   return (
-    <ScrollView 
+    <ScrollView
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false}
@@ -72,22 +79,18 @@ export default function AboutScreen() {
         <Typography variant="h1" align="center">
           About Yourself
         </Typography>
-        <Typography 
-          variant="body" 
-          align="center" 
-          style={styles.subtitle}
-        >
+        <Typography variant="body" align="center" style={styles.subtitle}>
           Help us personalize your skincare journey
         </Typography>
       </View>
-      
+
       <View style={styles.section}>
         <Typography variant="h3" style={styles.sectionTitle}>
           Gender
         </Typography>
-        
+
         <View style={styles.optionsContainer}>
-          {genderOptions.map(option => (
+          {genderOptions.map((option) => (
             <TouchableOpacity
               key={option.id}
               style={[
@@ -98,7 +101,11 @@ export default function AboutScreen() {
             >
               <Typography
                 variant="body"
-                color={selectedGender === option.id ? Colors.primary.default : Colors.text.secondary}
+                color={
+                  selectedGender === option.id
+                    ? Colors.primary.default
+                    : Colors.text.secondary
+                }
               >
                 {option.label}
               </Typography>
@@ -106,14 +113,14 @@ export default function AboutScreen() {
           ))}
         </View>
       </View>
-      
+
       <View style={styles.section}>
         <Typography variant="h3" style={styles.sectionTitle}>
           Age Group
         </Typography>
-        
+
         <View style={styles.optionsContainer}>
-          {ageGroups.map(age => (
+          {ageGroups.map((age) => (
             <TouchableOpacity
               key={age.id}
               style={[
@@ -125,7 +132,11 @@ export default function AboutScreen() {
             >
               <Typography
                 variant="body"
-                color={selectedAge === age.id ? Colors.primary.default : Colors.text.secondary}
+                color={
+                  selectedAge === age.id
+                    ? Colors.primary.default
+                    : Colors.text.secondary
+                }
               >
                 {age.label}
               </Typography>
@@ -133,18 +144,15 @@ export default function AboutScreen() {
           ))}
         </View>
       </View>
-      
+
       <View style={styles.section}>
         <Typography variant="h3" style={styles.sectionTitle}>
           Is this for you?
         </Typography>
-        
+
         <View style={styles.forContainer}>
           <TouchableOpacity
-            style={[
-              styles.forButton,
-              isForSelf && styles.selectedOption,
-            ]}
+            style={[styles.forButton, isForSelf && styles.selectedOption]}
             onPress={() => setIsForSelf(true)}
           >
             <Typography
@@ -154,24 +162,23 @@ export default function AboutScreen() {
               Yes, for myself
             </Typography>
           </TouchableOpacity>
-          
+
           <TouchableOpacity
-            style={[
-              styles.forButton,
-              !isForSelf && styles.selectedOption,
-            ]}
+            style={[styles.forButton, !isForSelf && styles.selectedOption]}
             onPress={() => setIsForSelf(false)}
           >
             <Typography
               variant="body"
-              color={!isForSelf ? Colors.primary.default : Colors.text.secondary}
+              color={
+                !isForSelf ? Colors.primary.default : Colors.text.secondary
+              }
             >
               No, for someone else
             </Typography>
           </TouchableOpacity>
         </View>
       </View>
-      
+
       <Button
         label="Continue"
         onPress={handleContinue}

@@ -13,34 +13,34 @@ import { getEncouragementMessage } from '@/utils/helpers';
 export default function ConcernsScreen() {
   const router = useRouter();
   const { user, updateUser } = useUser();
-  
+
   const [selectedConcerns, setSelectedConcerns] = useState<string[]>([]);
-  
+
   const toggleConcern = (id: string) => {
-    setSelectedConcerns(prev => {
+    setSelectedConcerns((prev) => {
       if (prev.includes(id)) {
-        return prev.filter(item => item !== id);
+        return prev.filter((item) => item !== id);
       } else {
         return [...prev, id];
       }
     });
   };
-  
+
   const handleContinue = async () => {
     try {
       await updateUser({
-        skinConcerns: selectedConcerns,
+        skin_concerns: selectedConcerns,
       });
-      
+
       router.push('/(onboarding)/routine');
     } catch (error) {
       console.error('Failed to update concerns:', error);
     }
   };
-  
+
   return (
     <View style={styles.container}>
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -48,17 +48,13 @@ export default function ConcernsScreen() {
           <Typography variant="h1" align="center">
             Skin Concerns
           </Typography>
-          <Typography 
-            variant="body" 
-            align="center" 
-            style={styles.subtitle}
-          >
+          <Typography variant="body" align="center" style={styles.subtitle}>
             Select all the concerns that apply to your skin
           </Typography>
         </View>
-        
+
         <View style={styles.concernsContainer}>
-          {skinConcerns.map(concern => (
+          {skinConcerns.map((concern) => (
             <SkinConcernCard
               key={concern.id}
               title={concern.title}
@@ -69,13 +65,14 @@ export default function ConcernsScreen() {
             />
           ))}
         </View>
-        
+
         <View style={styles.selectionSummary}>
           <Typography variant="bodySmall" color={Colors.text.tertiary}>
-            {selectedConcerns.length} concern{selectedConcerns.length !== 1 ? 's' : ''} selected
+            {selectedConcerns.length} concern
+            {selectedConcerns.length !== 1 ? 's' : ''} selected
           </Typography>
         </View>
-        
+
         <Button
           label="Continue"
           onPress={handleContinue}
@@ -86,11 +83,11 @@ export default function ConcernsScreen() {
           iconPosition="right"
           style={styles.button}
         />
-        
+
         {selectedConcerns.length > 0 && (
-          <Typography 
-            variant="bodySmall" 
-            align="center" 
+          <Typography
+            variant="bodySmall"
+            align="center"
             color={Colors.primary.dark}
             style={styles.encouragement}
           >

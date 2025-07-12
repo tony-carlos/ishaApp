@@ -1,12 +1,20 @@
 import { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { Platform } from 'react-native';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { useFonts } from 'expo-font';
-import { Poppins_300Light, Poppins_400Regular, Poppins_500Medium, Poppins_600SemiBold, Poppins_700Bold } from '@expo-google-fonts/poppins';
+import {
+  Poppins_300Light,
+  Poppins_400Regular,
+  Poppins_500Medium,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+} from '@expo-google-fonts/poppins';
 import * as SplashScreen from 'expo-splash-screen';
 import { UserProvider } from '@/contexts/UserContext';
 import { SkinAnalysisProvider } from '@/contexts/SkinAnalysisContext';
+import { CartProvider } from '@/contexts/CartContext';
 
 // Prevent the splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
@@ -38,13 +46,30 @@ export default function RootLayout() {
   return (
     <UserProvider>
       <SkinAnalysisProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="(onboarding)" options={{ animation: 'slide_from_right' }} />
-          <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
-          <Stack.Screen name="+not-found" />
-        </Stack>
-        <StatusBar style="auto" />
+        <CartProvider>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
+            <Stack.Screen
+              name="(onboarding)"
+              options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
+            <Stack.Screen
+              name="scan-results"
+              options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+              name="product-detail"
+              options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen name="+not-found" />
+          </Stack>
+          <StatusBar
+            style="dark"
+            backgroundColor="transparent"
+            translucent={Platform.OS === 'android'}
+          />
+        </CartProvider>
       </SkinAnalysisProvider>
     </UserProvider>
   );

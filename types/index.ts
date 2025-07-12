@@ -1,28 +1,46 @@
 export interface User {
   id: string;
-  fullName: string;
-  phoneNumber: string;
+  full_name: string;
+  phone_number: string;
+  email?: string;
   location: string;
   gender: 'male' | 'female' | 'non-binary' | 'prefer-not-to-say';
   age: number;
-  isForSelf: boolean;
-  skinConcerns: string[];
-  hasRoutine: boolean;
-  currentProducts: string[];
-  sunscreenFrequency: 'never' | 'sometimes' | 'often' | 'always';
+  is_for_self: boolean;
+  skin_concerns: string[];
+  has_routine: boolean;
+  current_products: string[];
+  sunscreen_frequency: 'never' | 'sometimes' | 'often' | 'always';
+  role?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Dependent {
   id: string;
-  userId: string;
-  fullName: string;
+  user_id: string;
+  full_name: string;
   relationship: string;
-  age: number;
   gender: 'male' | 'female' | 'non-binary' | 'prefer-not-to-say';
-  skinConcerns: string[];
-  hasRoutine: boolean;
-  currentProducts: string[];
-  sunscreenFrequency: 'never' | 'sometimes' | 'often' | 'always';
+  age: number;
+  skin_concerns: string[];
+  has_routine: boolean;
+  current_products: string[];
+  sunscreen_frequency: 'never' | 'sometimes' | 'often' | 'always';
+}
+
+export interface SkinConcern {
+  id: string;
+  name: string;
+  severity: 'low' | 'medium' | 'high';
+  description: string;
+}
+
+export interface Recommendation {
+  id: string;
+  type: 'product' | 'habit' | 'routine';
+  description: string;
+  priority: 'low' | 'medium' | 'high';
 }
 
 export interface SkinAnalysis {
@@ -30,17 +48,24 @@ export interface SkinAnalysis {
   userId: string;
   date: string;
   imageUrl: string;
-  concerns: {
-    id: string;
-    name: string;
-    severity: 'low' | 'medium' | 'high';
-    description: string;
-  }[];
-  recommendations: {
-    id: string;
-    type: 'product' | 'habit';
-    description: string;
-    priority: 'low' | 'medium' | 'high';
-  }[];
-  overallHealth: number;
+  concerns: SkinConcern[];
+  recommendations: Recommendation[];
+  overallHealth: number; // 0-100 score
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  brand: string;
+  ingredients?: string[];
+  image_url?: string;
+  skin_types?: string[];
+  concerns?: string[];
+  is_active: boolean;
+  stock_quantity: number;
+  rating: number;
+  review_count: number;
 }

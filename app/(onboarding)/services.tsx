@@ -1,17 +1,29 @@
-import { StyleSheet, View, FlatList, Image, TouchableOpacity } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  FlatList,
+  Image,
+  TouchableOpacity,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Typography from '@/components/ui/Typography';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Colors from '@/constants/Colors';
 import { useRouter } from 'expo-router';
-import { ScanSearch, ShoppingBag, MessageSquare, Gamepad2 } from 'lucide-react-native';
+import {
+  ScanSearch,
+  ShoppingBag,
+  MessageSquare,
+  Gamepad2,
+} from 'lucide-react-native';
 
 const services = [
   {
     id: 'face-scan',
     title: 'Face Scanning',
-    description: 'Analyze your skin with AI technology for personalized recommendations',
+    description:
+      'Analyze your skin with AI technology for personalized recommendations',
     icon: <ScanSearch size={28} color={Colors.primary.dark} />,
     image: 'https://images.pexels.com/photos/3373716/pexels-photo-3373716.jpeg',
   },
@@ -42,7 +54,7 @@ export default function ServicesScreen() {
   const router = useRouter();
 
   const handleGetStarted = () => {
-    router.push('/(onboarding)/registration');
+    router.push('/(onboarding)/login');
   };
 
   const renderServiceItem = ({ item }) => {
@@ -50,9 +62,7 @@ export default function ServicesScreen() {
       <Card style={styles.serviceCard} elevation={2}>
         <Image source={{ uri: item.image }} style={styles.serviceImage} />
         <View style={styles.serviceContent}>
-          <View style={styles.iconContainer}>
-            {item.icon}
-          </View>
+          <View style={styles.iconContainer}>{item.icon}</View>
           <Typography variant="h3" style={styles.serviceTitle}>
             {item.title}
           </Typography>
@@ -73,17 +83,22 @@ export default function ServicesScreen() {
         <Typography variant="display" style={styles.title} align="center">
           ISHER CARE
         </Typography>
-        
-        <Typography variant="h4" style={styles.subtitle} align="center" color={Colors.text.secondary}>
+
+        <Typography
+          variant="h4"
+          style={styles.subtitle}
+          align="center"
+          color={Colors.text.secondary}
+        >
           Beauty powered by Science
         </Typography>
       </LinearGradient>
-      
+
       <View style={styles.contentContainer}>
         <Typography variant="h2" style={styles.sectionTitle}>
           Our Services
         </Typography>
-        
+
         <FlatList
           data={services}
           renderItem={renderServiceItem}
@@ -91,10 +106,10 @@ export default function ServicesScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.servicesList}
         />
-        
-        <Button 
-          label="Get Started" 
-          onPress={handleGetStarted} 
+
+        <Button
+          label="Get Started"
+          onPress={handleGetStarted}
           size="lg"
           fullWidth
           style={styles.button}

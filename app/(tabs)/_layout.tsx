@@ -1,4 +1,5 @@
 import { Tabs } from 'expo-router';
+import { Platform } from 'react-native';
 import Colors from '@/constants/Colors';
 import {
   Chrome as Home,
@@ -15,21 +16,39 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors.primary.default,
         tabBarInactiveTintColor: Colors.text.tertiary,
         tabBarStyle: {
+          backgroundColor: Colors.neutral.white,
           borderTopWidth: 1,
           borderTopColor: Colors.neutral.light,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 8,
-          alignItems: 'center',
-          justifyContent: 'center',
+          height: Platform.OS === 'ios' ? 105 : 90,
+          paddingBottom: Platform.OS === 'ios' ? 34 : 20,
+          paddingTop: 20,
+          paddingHorizontal: 16,
+          marginHorizontal: 12,
+          marginBottom: Platform.OS === 'ios' ? 0 : 8,
+          borderRadius: 24,
+          shadowColor: Colors.neutral.darkest,
+          shadowOffset: {
+            width: 0,
+            height: -4,
+          },
+          shadowOpacity: 0.2,
+          shadowRadius: 16,
+          elevation: 16,
         },
         tabBarItemStyle: {
           alignItems: 'center',
           justifyContent: 'center',
+          paddingVertical: 8,
+          marginHorizontal: 4,
+          flex: 1,
+          minHeight: 50,
+          borderRadius: 16,
         },
         tabBarLabelStyle: {
-          fontFamily: 'Poppins-Regular',
-          fontSize: 12,
+          fontFamily: 'Poppins-Medium',
+          fontSize: 13,
+          fontWeight: '600',
+          marginTop: 8,
         },
         tabBarIconStyle: {
           marginBottom: 0,
@@ -41,15 +60,25 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Home
+              size={focused ? 32 : 28}
+              color={color}
+              strokeWidth={focused ? 2.5 : 2}
+            />
+          ),
         }}
       />
       <Tabs.Screen
         name="shop"
         options={{
           title: 'Shop',
-          tabBarIcon: ({ color, size }) => (
-            <ShoppingBag size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <ShoppingBag
+              size={focused ? 32 : 28}
+              color={color}
+              strokeWidth={focused ? 2.5 : 2}
+            />
           ),
         }}
       />
@@ -57,8 +86,12 @@ export default function TabLayout() {
         name="consultation"
         options={{
           title: 'Consult',
-          tabBarIcon: ({ color, size }) => (
-            <MessageSquare size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <MessageSquare
+              size={focused ? 32 : 28}
+              color={color}
+              strokeWidth={focused ? 2.5 : 2}
+            />
           ),
         }}
       />
@@ -66,8 +99,12 @@ export default function TabLayout() {
         name="game"
         options={{
           title: 'Game',
-          tabBarIcon: ({ color, size }) => (
-            <Gamepad2 size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Gamepad2
+              size={focused ? 32 : 28}
+              color={color}
+              strokeWidth={focused ? 2.5 : 2}
+            />
           ),
         }}
       />
@@ -75,13 +112,13 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="scan-results"
-        options={{
-          tabBarButton: () => null,
+          tabBarIcon: ({ color, focused }) => (
+            <User
+              size={focused ? 32 : 28}
+              color={color}
+              strokeWidth={focused ? 2.5 : 2}
+            />
+          ),
         }}
       />
     </Tabs>

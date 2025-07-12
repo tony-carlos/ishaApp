@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { StyleSheet, View, Image } from 'react-native';
+import { useEffect, useState } from 'react';
+import { StyleSheet, View, Image, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Typography from '@/components/ui/Typography';
 import Colors from '@/constants/Colors';
@@ -7,91 +7,172 @@ import { useRouter } from 'expo-router';
 import { useUser } from '@/contexts/UserContext';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
-export default function SplashScreen() {
+export default function IndexScreen() {
   const router = useRouter();
   const { isLoading, isAuthenticated } = useUser();
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
-    const navigateToNextScreen = setTimeout(() => {
-      if (!isLoading) {
-        if (isAuthenticated) {
-          router.replace('/(tabs)');
-        } else {
-          router.replace('/(onboarding)/services');
-        }
-      }
-    }, 3000); // 3 seconds splash screen
+    // Show splash for 3 seconds
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 3000);
 
-    return () => clearTimeout(navigateToNextScreen);
-  }, [isLoading, isAuthenticated, router]);
+    return () => clearTimeout(timer);
+  }, []);
 
-  return (
-    <LinearGradient
-      colors={[Colors.primary.light, Colors.accent.light]}
-      style={styles.container}
-    >
-      <Animated.View 
-        style={styles.content}
-        entering={FadeIn.duration(1000)}
-        exiting={FadeOut.duration(500)}
-      >
-        <View style={styles.logoContainer}>
-          <Image 
-            source={{ uri: 'https://images.pexels.com/photos/1029896/pexels-photo-1029896.jpeg' }}
-            style={styles.logoBackground}
-          />
-          <View style={styles.logoOverlay} />
-          <Typography variant="display" color={Colors.neutral.white} align="center">
-            ISHER CARE
-          </Typography>
-        </View>
-        
-        <Typography 
-          variant="h4" 
-          color={Colors.neutral.white} 
-          align="center"
-          style={styles.tagline}
+  // Auto-navigate only if user is already authenticated
+  useEffect(() => {
+    if (!showSplash && !isLoading && isAuthenticated) {
+      router.replace('/(tabs)');
+    }
+  }, [showSplash, isLoading, isAuthenticated, router]);
+
+  const handleGetStarted = () => {
+    router.push('/(onboarding)/login');
+  };
+
+  if (showSplash) {
+    return (
+      <View style={styles.container}>
+        <LinearGradient
+          colors={[Colors.primary.default, Colors.primary.dark]}
+          style={styles.gradient}
         >
-          Beauty powered by Science
-        </Typography>
-      </Animated.View>
-    </LinearGradient>
-  );
+          <Animated.View
+            entering={FadeIn}
+            exiting={FadeOut}
+            style={styles.content}
+          >
+            <Image
+              source={require('@/assets/images/icon.png')}
+              style={styles.logo}
+            />
+            <Typography
+              variant="h2"
+              color={Colors.neutral.white}
+              align="center"
+            >
+              IsherCare
+            </Typography>
+            <Typography
+              variant="body"
+              color={Colors.neutral.white}
+              align="center"
+              style={styles.subtitle}
+            >
+              Your Personal Skin Care Assistant
+            </Typography>
+          </Animated.View>
+        </LinearGradient>
+      </View>
+    );
+  }
+
+  // Show Get Started screen after splash
+  if (!isAuthenticated && !isLoading) {
+    return (
+      <View style={styles.container}>
+        <LinearGradient
+          colors={[Colors.primary.default, Colors.primary.dark]}
+          style={styles.gradient}
+        >
+          <View style={styles.getStartedContent}>
+            <Image
+              source={require('@/assets/images/icon.png')}
+              style={styles.logo}
+            />
+            <Typography
+              variant="h2"
+              color={Colors.neutral.white}
+              align="center"
+            >
+              Welcome to IsherCare
+            </Typography>
+            <Typography
+              variant="body"
+              color={Colors.neutral.white}
+              align="center"
+              style={styles.description}
+            >
+              Discover personalized skincare solutions tailored just for you
+            </Typography>
+
+            <TouchableOpacity
+              style={styles.getStartedButton}
+              onPress={handleGetStarted}
+            >
+              <Typography
+                variant="body"
+                color={Colors.primary.default}
+                align="center"
+                style={styles.buttonText}
+              >
+                Get Started
+              </Typography>
+            </TouchableOpacity>
+          </View>
+        </LinearGradient>
+      </View>
+    );
+  }
+
+  // Loading state
+  return null;
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
+  },
+  gradient: {
+    flex: 1,
     justifyContent: 'center',
+    alignItems: 'center',
   },
   content: {
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
+    padding: 20,
   },
-  logoContainer: {
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    overflow: 'hidden',
+  getStartedContent: {
     alignItems: 'center',
+    padding: 20,
     justifyContent: 'center',
-    marginBottom: 24,
-    position: 'relative',
+    flex: 1,
   },
-  logoBackground: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
+  logo: {
+    width: 120,
+    height: 120,
+    marginBottom: 20,
   },
-  logoOverlay: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+  subtitle: {
+    marginTop: 10,
+    opacity: 0.9,
   },
-  tagline: {
-    marginTop: 12,
+  description: {
+    marginTop: 15,
+    marginBottom: 40,
+    opacity: 0.9,
+    textAlign: 'center',
+    paddingHorizontal: 20,
+  },
+  getStartedButton: {
+    backgroundColor: Colors.neutral.white,
+    paddingHorizontal: 40,
+    paddingVertical: 15,
+    borderRadius: 25,
+    marginTop: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  buttonText: {
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });

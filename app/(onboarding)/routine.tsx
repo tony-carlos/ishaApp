@@ -30,7 +30,7 @@ interface ProductOption {
 // Define static data
 const routineOptions: RoutineOption[] = [
   { id: 'yes', label: 'Yes, I follow a routine', value: true },
-  { id: 'no', label: 'No, I don\'t have a routine', value: false },
+  { id: 'no', label: "No, I don't have a routine", value: false },
 ];
 
 const productOptions: ProductOption[] = [
@@ -56,42 +56,43 @@ const sunscreenOptions: SunscreenOption[] = [
 export default function RoutineScreen() {
   const router = useRouter();
   const { user, updateUser } = useUser();
-  
+
   const [hasRoutine, setHasRoutine] = useState<boolean>(false);
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
-  const [sunscreenFrequency, setSunscreenFrequency] = useState<string>('sometimes');
-  
+  const [sunscreenFrequency, setSunscreenFrequency] =
+    useState<string>('sometimes');
+
   const toggleProduct = (id: string) => {
-    setSelectedProducts(prev => {
+    setSelectedProducts((prev) => {
       if (prev.includes(id)) {
-        return prev.filter(item => item !== id);
+        return prev.filter((item) => item !== id);
       } else {
         return [...prev, id];
       }
     });
   };
-  
+
   const handleContinue = async () => {
     try {
-      const sunscreenValue = sunscreenOptions.find(
-        option => option.id === sunscreenFrequency
-      )?.value || 'sometimes';
-      
+      const sunscreenValue =
+        sunscreenOptions.find((option) => option.id === sunscreenFrequency)
+          ?.value || 'sometimes';
+
       await updateUser({
-        hasRoutine,
-        currentProducts: selectedProducts,
-        sunscreenFrequency: sunscreenValue,
+        has_routine: hasRoutine,
+        current_products: selectedProducts,
+        sunscreen_frequency: sunscreenValue,
       });
-      
+
       router.push('/(onboarding)/scan');
     } catch (error) {
       console.error('Failed to update routine info:', error);
     }
   };
-  
+
   return (
     <View style={styles.container}>
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -99,22 +100,18 @@ export default function RoutineScreen() {
           <Typography variant="h1" align="center">
             Your Skincare Habits
           </Typography>
-          <Typography 
-            variant="body" 
-            align="center" 
-            style={styles.subtitle}
-          >
+          <Typography variant="body" align="center" style={styles.subtitle}>
             Tell us about your current skincare routine
           </Typography>
         </View>
-        
+
         <View style={styles.section}>
           <Typography variant="h3" style={styles.sectionTitle}>
             Do you have a daily skincare routine?
           </Typography>
-          
+
           <View style={styles.optionsContainer}>
-            {routineOptions.map(option => (
+            {routineOptions.map((option) => (
               <TouchableOpacity
                 key={option.id}
                 style={[
@@ -125,7 +122,11 @@ export default function RoutineScreen() {
               >
                 <Typography
                   variant="body"
-                  color={hasRoutine === option.value ? Colors.primary.default : Colors.text.secondary}
+                  color={
+                    hasRoutine === option.value
+                      ? Colors.primary.default
+                      : Colors.text.secondary
+                  }
                 >
                   {option.label}
                 </Typography>
@@ -133,20 +134,21 @@ export default function RoutineScreen() {
             ))}
           </View>
         </View>
-        
+
         {hasRoutine && (
           <View style={styles.section}>
             <Typography variant="h3" style={styles.sectionTitle}>
               Which products do you currently use?
             </Typography>
-            
+
             <View style={styles.productsGrid}>
-              {productOptions.map(product => (
+              {productOptions.map((product) => (
                 <TouchableOpacity
                   key={product.id}
                   style={[
                     styles.productButton,
-                    selectedProducts.includes(product.id) && styles.selectedProduct,
+                    selectedProducts.includes(product.id) &&
+                      styles.selectedProduct,
                   ]}
                   onPress={() => toggleProduct(product.id)}
                 >
@@ -157,7 +159,11 @@ export default function RoutineScreen() {
                   )}
                   <Typography
                     variant="bodySmall"
-                    color={selectedProducts.includes(product.id) ? Colors.primary.default : Colors.text.secondary}
+                    color={
+                      selectedProducts.includes(product.id)
+                        ? Colors.primary.default
+                        : Colors.text.secondary
+                    }
                   >
                     {product.label}
                   </Typography>
@@ -166,14 +172,14 @@ export default function RoutineScreen() {
             </View>
           </View>
         )}
-        
+
         <View style={styles.section}>
           <Typography variant="h3" style={styles.sectionTitle}>
             How often do you wear sunscreen?
           </Typography>
-          
+
           <View style={styles.sunscreenOptions}>
-            {sunscreenOptions.map(option => (
+            {sunscreenOptions.map((option) => (
               <TouchableOpacity
                 key={option.id}
                 style={[
@@ -184,7 +190,11 @@ export default function RoutineScreen() {
               >
                 <Typography
                   variant="body"
-                  color={sunscreenFrequency === option.id ? Colors.primary.default : Colors.text.secondary}
+                  color={
+                    sunscreenFrequency === option.id
+                      ? Colors.primary.default
+                      : Colors.text.secondary
+                  }
                 >
                   {option.label}
                 </Typography>
@@ -192,7 +202,7 @@ export default function RoutineScreen() {
             ))}
           </View>
         </View>
-        
+
         <Button
           label="Continue"
           onPress={handleContinue}
@@ -203,10 +213,10 @@ export default function RoutineScreen() {
           iconPosition="right"
           style={styles.button}
         />
-        
-        <Typography 
-          variant="bodySmall" 
-          align="center" 
+
+        <Typography
+          variant="bodySmall"
+          align="center"
           color={Colors.primary.dark}
           style={styles.encouragement}
         >

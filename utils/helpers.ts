@@ -23,10 +23,7 @@ export const getEncouragementMessage = () => {
   return messages[Math.floor(Math.random() * messages.length)];
 };
 
-// Helper to simulate API calls with a delay
-export const mockApiCall = (delay: number): Promise<void> => {
-  return new Promise((resolve) => setTimeout(resolve, delay));
-};
+// Removed mock API call function - using real Python API now
 
 // Helper to generate a random ID
 export const generateId = (): string => {

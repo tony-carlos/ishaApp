@@ -13,6 +13,7 @@ import {
   Animated,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Typography from '@/components/ui/Typography';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
@@ -463,7 +464,7 @@ export default function ConsultationScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <LinearGradient
         colors={[Colors.secondary.light, Colors.background.primary]}
         style={styles.headerGradient}
@@ -535,7 +536,7 @@ export default function ConsultationScreen() {
           </View>
         </ScrollView>
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -553,7 +554,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 24,
-    paddingTop: 60,
+    paddingTop: 24,
     marginBottom: 24,
   },
   headerSubtitle: {

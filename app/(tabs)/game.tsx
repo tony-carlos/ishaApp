@@ -1,10 +1,24 @@
 import { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, TouchableOpacity, Animated, Dimensions, Alert } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  Animated,
+  Dimensions,
+  Alert,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Typography from '@/components/ui/Typography';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Colors from '@/constants/Colors';
-import { Play, CirclePause as PauseCircle, RotateCcw, Trophy, CircleHelp as HelpCircle } from 'lucide-react-native';
+import {
+  Play,
+  CirclePause as PauseCircle,
+  RotateCcw,
+  Trophy,
+  CircleHelp as HelpCircle,
+} from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -30,45 +44,47 @@ export default function GameScreen() {
   const [bubbles, setBubbles] = useState<Bubble[]>([]);
   const [level, setLevel] = useState(1);
   const [gameOver, setGameOver] = useState(false);
-  
-  const gameTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const bubbleGenTimerRef = useRef<NodeJS.Timeout | null>(null);
-  
+
+  const gameTimerRef = useRef<number | null>(null);
+  const bubbleGenTimerRef = useRef<number | null>(null);
+
   const bubbleTypes = ['cleanser', 'moisturizer', 'sunscreen', 'serum', 'bad'];
-  
+
   // Function to generate a random bubble
   const generateBubble = () => {
     const id = Math.random().toString(36).substring(7);
-    const type = bubbleTypes[Math.floor(Math.random() * bubbleTypes.length)];
+    const type = bubbleTypes[
+      Math.floor(Math.random() * bubbleTypes.length)
+    ] as Bubble['type'];
     const x = Math.random() * (GAME_WIDTH - BUBBLE_SIZE);
-    
+
     const newBubble: Bubble = {
       id,
       type,
       position: { x, y: -BUBBLE_SIZE },
       animValue: new Animated.Value(-BUBBLE_SIZE),
     };
-    
-    setBubbles(prev => [...prev, newBubble]);
-    
+
+    setBubbles((prev) => [...prev, newBubble]);
+
     // Animate the bubble falling
     Animated.timing(newBubble.animValue, {
       toValue: GAME_WIDTH + BUBBLE_SIZE,
-      duration: 4000 - (level * 500), // Speed increases with level
+      duration: 4000 - level * 500, // Speed increases with level
       useNativeDriver: true,
     }).start(({ finished }) => {
       if (finished) {
         // Remove the bubble when animation is done
-        setBubbles(prev => prev.filter(b => b.id !== id));
-        
+        setBubbles((prev) => prev.filter((b) => b.id !== id));
+
         // If it's a good bubble and it reached the bottom, decrease score
         if (type !== 'bad' && isPlaying) {
-          setScore(prev => Math.max(0, prev - 1));
+          setScore((prev) => Math.max(0, prev - 1));
         }
       }
     });
   };
-  
+
   // Start the game
   const startGame = () => {
     setIsPlaying(true);
@@ -77,10 +93,10 @@ export default function GameScreen() {
     setTime(60);
     setLevel(1);
     setBubbles([]);
-    
+
     // Start game timer
     gameTimerRef.current = setInterval(() => {
-      setTime(prev => {
+      setTime((prev) => {
         if (prev <= 1) {
           endGame();
           return 0;
@@ -88,38 +104,38 @@ export default function GameScreen() {
         return prev - 1;
       });
     }, 1000);
-    
+
     // Start bubble generation
     bubbleGenTimerRef.current = setInterval(generateBubble, 1000);
   };
-  
+
   // Pause the game
   const pauseGame = () => {
     setIsPlaying(false);
-    
+
     if (gameTimerRef.current) {
       clearInterval(gameTimerRef.current);
       gameTimerRef.current = null;
     }
-    
+
     if (bubbleGenTimerRef.current) {
       clearInterval(bubbleGenTimerRef.current);
       bubbleGenTimerRef.current = null;
     }
-    
+
     // Pause all bubble animations
-    bubbles.forEach(bubble => {
+    bubbles.forEach((bubble) => {
       bubble.animValue.stopAnimation();
     });
   };
-  
+
   // Resume the game
   const resumeGame = () => {
     setIsPlaying(true);
-    
+
     // Resume game timer
     gameTimerRef.current = setInterval(() => {
-      setTime(prev => {
+      setTime((prev) => {
         if (prev <= 1) {
           endGame();
           return 0;
@@ -127,74 +143,74 @@ export default function GameScreen() {
         return prev - 1;
       });
     }, 1000);
-    
+
     // Resume bubble generation
     bubbleGenTimerRef.current = setInterval(generateBubble, 1000);
-    
+
     // Resume all bubble animations
-    bubbles.forEach(bubble => {
+    bubbles.forEach((bubble) => {
       // This is a simplified resume - in a real game, you'd need to calculate the remaining duration
       Animated.timing(bubble.animValue, {
         toValue: GAME_WIDTH + BUBBLE_SIZE,
-        duration: 4000 - (level * 500),
+        duration: 4000 - level * 500,
         useNativeDriver: true,
       }).start();
     });
   };
-  
+
   // End the game
   const endGame = () => {
     setIsPlaying(false);
     setGameOver(true);
-    
+
     if (gameTimerRef.current) {
       clearInterval(gameTimerRef.current);
       gameTimerRef.current = null;
     }
-    
+
     if (bubbleGenTimerRef.current) {
       clearInterval(bubbleGenTimerRef.current);
       bubbleGenTimerRef.current = null;
     }
-    
+
     // Update high score
     if (score > highScore) {
       setHighScore(score);
     }
   };
-  
+
   // Handle bubble press
   const onBubblePress = (id: string, type: string) => {
     if (!isPlaying) return;
-    
+
     if (type === 'bad') {
       // Pressing a bad bubble reduces score
-      setScore(prev => Math.max(0, prev - 2));
-      Alert.alert("Oops!", "That was a harmful ingredient! -2 points");
+      setScore((prev) => Math.max(0, prev - 2));
+      Alert.alert('Oops!', 'That was a harmful ingredient! -2 points');
     } else {
       // Pressing a good bubble increases score
-      setScore(prev => prev + 1);
-      
+      setScore((prev) => prev + 1);
+
       // Level up every 10 points
       if ((score + 1) % 10 === 0) {
-        setLevel(prev => prev + 1);
-        Alert.alert("Level Up!", `You've reached level ${level + 1}`);
+        setLevel((prev) => prev + 1);
+        Alert.alert('Level Up!', `You've reached level ${level + 1}`);
       }
     }
-    
+
     // Remove the bubble
-    setBubbles(prev => prev.filter(b => b.id !== id));
+    setBubbles((prev) => prev.filter((b) => b.id !== id));
   };
-  
+
   // Show game instructions
   const showInstructions = () => {
     Alert.alert(
-      "Skincare Bubble Pop",
-      "Pop the good skincare ingredients (cleansers, moisturizers, serums, sunscreens) to earn points. Avoid harmful ingredients that will reduce your score. Level up by earning more points, but beware - the game gets faster with each level!",
-      [{ text: "Got it!" }]
+      'Skincare Bubble Pop',
+      'Pop the good skincare ingredients (cleansers, moisturizers, serums, sunscreens) to earn points. Avoid harmful ingredients that will reduce your score. Level up by earning more points, but beware - the game gets faster with each level!',
+      [{ text: 'Got it!' }]
     );
   };
-  
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -202,11 +218,11 @@ export default function GameScreen() {
       if (bubbleGenTimerRef.current) clearInterval(bubbleGenTimerRef.current);
     };
   }, []);
-  
+
   // Render bubble based on type
   const renderBubble = (bubble: Bubble) => {
     let bubbleColor;
-    
+
     switch (bubble.type) {
       case 'cleanser':
         bubbleColor = Colors.primary.default;
@@ -226,7 +242,7 @@ export default function GameScreen() {
       default:
         bubbleColor = Colors.neutral.medium;
     }
-    
+
     return (
       <Animated.View
         key={bubble.id}
@@ -244,73 +260,94 @@ export default function GameScreen() {
           onPress={() => onBubblePress(bubble.id, bubble.type)}
         >
           <Typography variant="caption" color={Colors.neutral.white}>
-            {bubble.type === 'bad' ? 'Bad' : bubble.type.charAt(0).toUpperCase() + bubble.type.slice(1, 3)}
+            {bubble.type === 'bad'
+              ? 'Bad'
+              : bubble.type.charAt(0).toUpperCase() + bubble.type.slice(1, 3)}
           </Typography>
         </TouchableOpacity>
       </Animated.View>
     );
   };
-  
+
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <LinearGradient
         colors={[Colors.accent.light, Colors.background.primary]}
         style={styles.headerGradient}
       />
-      
+
       <View style={styles.header}>
-        <Typography variant="h2">
-          Skincare Bubble Pop
-        </Typography>
+        <Typography variant="h2">Skincare Bubble Pop</Typography>
         <TouchableOpacity onPress={showInstructions} style={styles.helpButton}>
           <HelpCircle size={24} color={Colors.primary.default} />
         </TouchableOpacity>
       </View>
-      
+
       <View style={styles.gameInfo}>
         <Card style={styles.scoreCard}>
           <Typography variant="h4" align="center">
             Score
           </Typography>
-          <Typography variant="display" color={Colors.primary.default} align="center">
+          <Typography
+            variant="display"
+            color={Colors.primary.default}
+            align="center"
+          >
             {score}
           </Typography>
         </Card>
-        
+
         <Card style={styles.timeCard}>
           <Typography variant="h4" align="center">
             Time
           </Typography>
-          <Typography 
-            variant="display" 
-            color={time < 10 ? Colors.error.default : Colors.text.primary} 
+          <Typography
+            variant="display"
+            color={time < 10 ? Colors.error.default : Colors.text.primary}
             align="center"
           >
             {time}
           </Typography>
         </Card>
-        
+
         <Card style={styles.levelCard}>
           <Typography variant="h4" align="center">
             Level
           </Typography>
-          <Typography variant="display" color={Colors.secondary.default} align="center">
+          <Typography
+            variant="display"
+            color={Colors.secondary.default}
+            align="center"
+          >
             {level}
           </Typography>
         </Card>
       </View>
-      
+
       <View style={styles.gameContainer}>
         {!isPlaying && !gameOver && (
           <Card style={styles.startCard}>
-            <Trophy size={40} color={Colors.primary.default} style={styles.trophyIcon} />
+            <Trophy
+              size={40}
+              color={Colors.primary.default}
+              style={styles.trophyIcon}
+            />
             <Typography variant="h3" align="center">
               Skincare Bubble Pop
             </Typography>
-            <Typography variant="body" align="center" style={styles.instructionsText}>
-              Pop skincare ingredient bubbles to earn points! Avoid harmful ingredients.
+            <Typography
+              variant="body"
+              align="center"
+              style={styles.instructionsText}
+            >
+              Pop skincare ingredient bubbles to earn points! Avoid harmful
+              ingredients.
             </Typography>
-            <Typography variant="bodySmall" align="center" style={styles.highScoreText}>
+            <Typography
+              variant="bodySmall"
+              align="center"
+              style={styles.highScoreText}
+            >
               High Score: {highScore}
             </Typography>
             <Button
@@ -324,13 +361,18 @@ export default function GameScreen() {
             />
           </Card>
         )}
-        
+
         {gameOver && (
           <Card style={styles.gameOverCard}>
             <Typography variant="h3" align="center">
               Game Over!
             </Typography>
-            <Typography variant="h2" color={Colors.primary.default} align="center" style={styles.finalScore}>
+            <Typography
+              variant="h2"
+              color={Colors.primary.default}
+              align="center"
+              style={styles.finalScore}
+            >
               {score}
             </Typography>
             <Typography variant="body" align="center">
@@ -347,14 +389,12 @@ export default function GameScreen() {
             />
           </Card>
         )}
-        
+
         {isPlaying && (
-          <View style={styles.gamePlayArea}>
-            {bubbles.map(renderBubble)}
-          </View>
+          <View style={styles.gamePlayArea}>{bubbles.map(renderBubble)}</View>
         )}
       </View>
-      
+
       {isPlaying && (
         <View style={styles.gameControls}>
           <Button
@@ -367,7 +407,7 @@ export default function GameScreen() {
           />
         </View>
       )}
-      
+
       {!isPlaying && !gameOver && bubbles.length > 0 && (
         <View style={styles.gameControls}>
           <Button
@@ -380,7 +420,7 @@ export default function GameScreen() {
           />
         </View>
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -401,7 +441,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 24,
-    paddingTop: 60,
+    paddingTop: 24,
     marginBottom: 24,
   },
   helpButton: {
