@@ -4,6 +4,8 @@ import { StatusBar } from 'expo-status-bar';
 import { Platform } from 'react-native';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { useFonts } from 'expo-font';
+import * as tf from '@tensorflow/tfjs';
+import '@tensorflow/tfjs-react-native';
 import {
   Poppins_300Light,
   Poppins_400Regular,
@@ -32,11 +34,24 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (fontsLoaded || fontError) {
-      // Hide splash screen
-      SplashScreen.hideAsync();
-      setAppIsReady(true);
+    async function initializeApp() {
+      if (fontsLoaded || fontError) {
+        // Initialize TensorFlow.js
+        try {
+          console.log('🔧 Initializing TensorFlow.js platform...');
+          await tf.ready();
+          console.log('✅ TensorFlow.js platform ready');
+        } catch (error) {
+          console.error('❌ TensorFlow.js initialization failed:', error);
+        }
+
+        // Hide splash screen
+        SplashScreen.hideAsync();
+        setAppIsReady(true);
+      }
     }
+
+    initializeApp();
   }, [fontsLoaded, fontError]);
 
   if (!appIsReady) {

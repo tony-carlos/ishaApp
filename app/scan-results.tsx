@@ -11,12 +11,7 @@ import Typography from '@/components/ui/Typography';
 import Button from '@/components/ui/Button';
 import Colors from '@/constants/Colors';
 import { useSkinAnalysis } from '@/contexts/SkinAnalysisContext';
-import {
-  ArrowLeft,
-  ChevronRight,
-  BookOpen,
-  AlertCircle,
-} from 'lucide-react-native';
+import { ArrowLeft, ChevronRight, Info, Alert } from '@/utils/icons';
 import Card from '@/components/ui/Card';
 import { LinearGradient } from 'expo-linear-gradient';
 

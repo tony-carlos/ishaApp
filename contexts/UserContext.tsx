@@ -37,27 +37,37 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const checkAuthStatus = async () => {
     try {
+      console.log('🔍 Checking auth status...');
       setIsLoading(true);
 
       // First check if we have a stored token
+      console.log('📱 Checking for stored token...');
       const hasToken = await apiService.hasAuthToken();
+      console.log('🎫 Has token:', hasToken);
 
       if (!hasToken) {
         // No token stored, user is not authenticated
+        console.log('❌ No token found, user not authenticated');
         setUser(null);
         return;
       }
 
       // We have a token, so check if it's valid
+      console.log('🔐 Token found, validating with server...');
       const response = await apiService.getCurrentUser();
+      console.log('📡 Server response:', response);
+
       if (response.success && response.data) {
+        console.log('✅ User authenticated:', response.data.full_name);
         setUser(response.data);
       } else {
         // Token exists but is invalid, clear it
+        console.log('❌ Invalid token, clearing...');
         await apiService.clearAuthToken();
         setUser(null);
       }
     } catch (error: any) {
+      console.log('❌ Auth check error:', error.message);
       // Only log errors that aren't related to authentication
       if (
         !error.message.includes('Unauthenticated') &&
@@ -69,6 +79,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       await apiService.clearAuthToken();
       setUser(null);
     } finally {
+      console.log('✅ Auth check complete, setting loading to false');
       setIsLoading(false);
     }
   };

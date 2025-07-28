@@ -5,7 +5,7 @@ import Typography from '@/components/ui/Typography';
 import Button from '@/components/ui/Button';
 import Colors from '@/constants/Colors';
 import { useUser } from '@/contexts/UserContext';
-import { ArrowRight } from 'lucide-react-native';
+import { ArrowRight } from '@/utils/icons';
 
 interface GenderOption {
   id: string;

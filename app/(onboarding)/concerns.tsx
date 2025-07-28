@@ -5,7 +5,7 @@ import Typography from '@/components/ui/Typography';
 import Button from '@/components/ui/Button';
 import Colors from '@/constants/Colors';
 import { useUser } from '@/contexts/UserContext';
-import { ArrowRight, Check } from 'lucide-react-native';
+import { ArrowRight, Check } from '@/utils/icons';
 import SkinConcernCard from '@/components/ui/SkinConcernCard';
 import { skinConcerns } from '@/assets/data/skinConcerns';
 import { getEncouragementMessage } from '@/utils/helpers';

@@ -19,16 +19,15 @@ import Input from '@/components/ui/Input';
 import Colors from '@/constants/Colors';
 import {
   Search,
-  FilterX,
   Star,
-  ShoppingBag,
+  Shop,
   Heart,
-  RefreshCw,
+  RotateCw,
   X,
   Plus,
   Minus,
   Filter,
-} from 'lucide-react-native';
+} from '@/utils/icons';
 import apiService from '@/utils/api';
 import { useUser } from '@/contexts/UserContext';
 import { useCart } from '@/contexts/CartContext';
@@ -273,11 +272,7 @@ export default function ShopScreen() {
             </Typography>
 
             <View style={styles.productRating}>
-              <Star
-                size={14}
-                color={Colors.warning.default}
-                fill={Colors.warning.default}
-              />
+              <Star size={14} color={Colors.warning.default} />
               <Typography variant="caption" style={styles.ratingText}>
                 {typeof item.rating === 'string'
                   ? item.rating
@@ -332,7 +327,7 @@ export default function ShopScreen() {
                   onPress={() => addToCart(item.id)}
                   disabled={item.stock_quantity === 0}
                 >
-                  <ShoppingBag size={16} color={Colors.neutral.white} />
+                  <Shop size={16} color={Colors.neutral.white} />
                 </TouchableOpacity>
               )}
             </View>
@@ -386,7 +381,7 @@ export default function ShopScreen() {
                 onPress={handleRefresh}
                 disabled={isRefreshing}
               >
-                <RefreshCw size={20} color={Colors.text.primary} />
+                <RotateCw size={20} color={Colors.text.primary} />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -401,7 +396,7 @@ export default function ShopScreen() {
                   style={styles.cartButton}
                   onPress={() => setShowCartModal(true)}
                 >
-                  <ShoppingBag size={24} color={Colors.text.primary} />
+                  <Shop size={24} color={Colors.text.primary} />
                   {cart.length > 0 && (
                     <View style={styles.cartBadge}>
                       <Typography
@@ -426,7 +421,7 @@ export default function ShopScreen() {
               rightIcon={
                 searchQuery ? (
                   <TouchableOpacity onPress={() => setSearchQuery('')}>
-                    <FilterX size={20} color={Colors.neutral.medium} />
+                    <X size={20} color={Colors.neutral.medium} />
                   </TouchableOpacity>
                 ) : null
               }
@@ -481,7 +476,7 @@ export default function ShopScreen() {
 
           {cart.length === 0 ? (
             <View style={styles.emptyCartContainer}>
-              <ShoppingBag size={64} color={Colors.neutral.medium} />
+              <Shop size={64} color={Colors.neutral.medium} />
               <Typography variant="h4" color={Colors.text.secondary}>
                 Your cart is empty
               </Typography>
@@ -658,11 +653,6 @@ export default function ShopScreen() {
                         selectedRating >= rating
                           ? Colors.warning.default
                           : Colors.neutral.medium
-                      }
-                      fill={
-                        selectedRating >= rating
-                          ? Colors.warning.default
-                          : 'none'
                       }
                     />
                     <Typography variant="caption">{rating}+</Typography>

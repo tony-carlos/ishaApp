@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Face Detection</title>
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background: #000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        font-family: Arial, sans-serif;
+      }
+      #container {
+        position: relative;
+        width: 100%;
+        height: 100vh;
+        overflow: hidden;
+      }
+      #video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      #canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+      #status {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 10px;
+        border-radius: 8px;
+        text-align: center;
+        font-size: 14px;
+        z-index: 10;
+      }
+      #controls {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        right: 20px;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        z-index: 10;
+      }
+      button {
+        background: #007aff;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #0056cc;
+      }
+      button:disabled {
+        background: #666;
+        cursor: not-allowed;
+      }
+      .face-box {
+        position: absolute;
+        border: 3px solid #00ff00;
+        border-radius: 8px;
+        pointer-events: none;
+      }
+      .loading {
+        color: #ffd700;
+      }
+      .ready {
+        color: #00ff00;
+      }
+      .error {
+        color: #ff6b6b;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <video id="video" autoplay muted playsinline></video>
+      <canvas id="canvas"></canvas>
+      <div id="status" class="loading">Loading face detection models...</div>
+      <div id="controls">
+        <button id="captureBtn" disabled>Capture</button>
+        <button id="flipBtn">Flip Camera</button>
+      </div>
+    </div>
+
+    <script>
+      class FaceDetectionApp {
+        constructor() {
+          this.video = document.getElementById('video');
+          this.canvas = document.getElementById('canvas');
+          this.ctx = this.canvas.getContext('2d');
+          this.status = document.getElementById('status');
+          this.captureBtn = document.getElementById('captureBtn');
+          this.flipBtn = document.getElementById('flipBtn');
+
+          this.isModelLoaded = false;
+          this.isDetecting = false;
+          this.currentFacing = 'user';
+          this.detectionInterval = null;
+          this.currentDetection = null;
+
+          this.init();
+        }
+
+        async init() {
+          try {
+            await this.loadModels();
+            await this.startCamera();
+            this.setupEventListeners();
+            this.startDetection();
+          } catch (error) {
+            console.error('Initialization failed:', error);
+            this.updateStatus('Failed to initialize face detection', 'error');
+          }
+        }
+
+        async loadModels() {
+          this.updateStatus('Loading face detection models...', 'loading');
+
+          try {
+            await faceapi.nets.tinyFaceDetector.loadFromUri(
+              'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights'
+            );
+            await faceapi.nets.faceLandmark68Net.loadFromUri(
+              'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights'
+            );
+
+            this.isModelLoaded = true;
+            this.updateStatus('Models loaded successfully!', 'ready');
+            console.log('Face detection models loaded');
+          } catch (error) {
+            console.error('Model loading failed:', error);
+            this.updateStatus('Failed to load models', 'error');
+            throw error;
+          }
+        }
+
+        async startCamera() {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+              video: {
+                width: { ideal: 640 },
+                height: { ideal: 480 },
+                facingMode: this.currentFacing,
+              },
+            });
+
+            this.video.srcObject = stream;
+            this.video.addEventListener('loadedmetadata', () => {
+              this.canvas.width = this.video.videoWidth;
+              this.canvas.height = this.video.videoHeight;
+            });
+          } catch (error) {
+            console.error('Camera access failed:', error);
+            this.updateStatus('Camera access denied', 'error');
+            throw error;
+          }
+        }
+
+        setupEventListeners() {
+          this.captureBtn.addEventListener('click', () => {
+            this.captureImage();
+          });
+
+          this.flipBtn.addEventListener('click', () => {
+            this.flipCamera();
+          });
+
+          // Message passing to React Native
+          window.addEventListener('message', (event) => {
+            const { type, data } = event.data;
+            switch (type) {
+              case 'CAPTURE':
+                this.captureImage();
+                break;
+              case 'FLIP_CAMERA':
+                this.flipCamera();
+                break;
+            }
+          });
+        }
+
+        startDetection() {
+          if (!this.isModelLoaded || this.isDetecting) return;
+
+          this.isDetecting = true;
+          this.detectionInterval = setInterval(async () => {
+            await this.detectFaces();
+          }, 100); // Detect every 100ms for smooth experience
+        }
+
+        stopDetection() {
+          this.isDetecting = false;
+          if (this.detectionInterval) {
+            clearInterval(this.detectionInterval);
+            this.detectionInterval = null;
+          }
+        }
+
+        async detectFaces() {
+          if (!this.video.videoWidth || !this.video.videoHeight) return;
+
+          try {
+            const detections = await faceapi
+              .detectAllFaces(
+                this.video,
+                new faceapi.TinyFaceDetectorOptions({
+                  inputSize: 416,
+                  scoreThreshold: 0.3,
+                })
+              )
+              .withFaceLandmarks();
+
+            // Clear previous drawings
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+            if (detections.length > 0) {
+              const detection = detections[0];
+              const box = detection.detection.box;
+
+              // Draw face bounding box
+              this.ctx.strokeStyle = '#00FF00';
+              this.ctx.lineWidth = 3;
+              this.ctx.strokeRect(box.x, box.y, box.width, box.height);
+
+              // Calculate face quality metrics
+              const faceAnalysis = this.analyzeFaceQuality(detection);
+              this.currentDetection = faceAnalysis;
+
+              this.updateStatus(
+                this.getFeedbackMessage(faceAnalysis),
+                faceAnalysis.faceQuality === 'excellent' ? 'ready' : 'loading'
+              );
+
+              this.captureBtn.disabled = !this.isReadyForCapture(faceAnalysis);
+
+              // Send detection data to React Native
+              this.postMessage('FACE_DETECTED', faceAnalysis);
+            } else {
+              this.currentDetection = null;
+              this.updateStatus('Position your face in the camera', 'loading');
+              this.captureBtn.disabled = true;
+
+              this.postMessage('NO_FACE_DETECTED', {
+                hasFace: false,
+                confidence: 0,
+                faceCount: 0,
+              });
+            }
+          } catch (error) {
+            console.error('Detection error:', error);
+          }
+        }
+
+        analyzeFaceQuality(detection) {
+          const box = detection.detection.box;
+          const confidence = detection.detection.score;
+          const landmarks = detection.landmarks;
+
+          // Calculate center position relative to video
+          const centerX = box.x + box.width / 2;
+          const centerY = box.y + box.height / 2;
+          const videoCenterX = this.video.videoWidth / 2;
+          const videoCenterY = this.video.videoHeight / 2;
+
+          // Distance from center (normalized)
+          const distanceFromCenter = Math.sqrt(
+            Math.pow((centerX - videoCenterX) / videoCenterX, 2) +
+              Math.pow((centerY - videoCenterY) / videoCenterY, 2)
+          );
+
+          // Face size analysis
+          const faceSize =
+            (box.width * box.height) /
+            (this.video.videoWidth * this.video.videoHeight);
+
+          // Determine quality metrics
+          const lighting =
+            confidence > 0.8 ? 'good' : confidence > 0.5 ? 'ok' : 'poor';
+          const distance =
+            faceSize > 0.15
+              ? 'too_close'
+              : faceSize < 0.05
+              ? 'too_far'
+              : 'good';
+          const faceAngle =
+            confidence > 0.7
+              ? 'straight'
+              : confidence > 0.4
+              ? 'tilted'
+              : 'turned';
+          const faceCentered = distanceFromCenter < 0.3;
+
+          // Overall quality
+          let faceQuality = 'poor';
+          if (
+            confidence > 0.8 &&
+            distance === 'good' &&
+            faceCentered &&
+            lighting === 'good'
+          ) {
+            faceQuality = 'excellent';
+          } else if (
+            confidence > 0.6 &&
+            distance === 'good' &&
+            lighting !== 'poor'
+          ) {
+            faceQuality = 'good';
+          } else if (confidence > 0.4) {
+            faceQuality = 'fair';
+          }
+
+          return {
+            hasFace: true,
+            confidence: Math.round(confidence * 100),
+            faceCount: 1,
+            lighting,
+            faceAngle,
+            distance,
+            faceQuality,
+            faceCentered,
+            boundingBox: {
+              origin: { x: box.x, y: box.y },
+              size: { width: box.width, height: box.height },
+            },
+          };
+        }
+
+        getFeedbackMessage(detection) {
+          if (!detection.hasFace) return 'Position your face in the camera';
+
+          if (detection.distance === 'too_close') return 'Move back a little';
+          if (detection.distance === 'too_far')
+            return 'Move closer to the camera';
+          if (detection.faceAngle !== 'straight')
+            return 'Keep your head straight';
+          if (detection.lighting === 'poor') return 'Find better lighting';
+          if (!detection.faceCentered) return 'Center your face in the frame';
+
+          if (detection.faceQuality === 'excellent')
+            return 'Perfect! Ready to capture';
+          if (detection.faceQuality === 'good') return 'Good positioning';
+
+          return 'Adjust your position';
+        }
+
+        isReadyForCapture(detection) {
+          return (
+            detection.faceQuality === 'excellent' ||
+            (detection.faceQuality === 'good' && detection.faceCentered)
+          );
+        }
+
+        async captureImage() {
+          if (
+            !this.currentDetection ||
+            !this.isReadyForCapture(this.currentDetection)
+          ) {
+            this.updateStatus(
+              'Please position your face properly first',
+              'error'
+            );
+            return;
+          }
+
+          try {
+            // Create a canvas to capture the current video frame
+            const captureCanvas = document.createElement('canvas');
+            const captureCtx = captureCanvas.getContext('2d');
+
+            captureCanvas.width = this.video.videoWidth;
+            captureCanvas.height = this.video.videoHeight;
+
+            captureCtx.drawImage(this.video, 0, 0);
+
+            // Convert to base64
+            const imageData = captureCanvas.toDataURL('image/jpeg', 0.8);
+
+            this.postMessage('IMAGE_CAPTURED', {
+              imageData,
+              detection: this.currentDetection,
+            });
+
+            this.updateStatus('Image captured successfully!', 'ready');
+          } catch (error) {
+            console.error('Capture failed:', error);
+            this.updateStatus('Failed to capture image', 'error');
+          }
+        }
+
+        async flipCamera() {
+          try {
+            this.currentFacing =
+              this.currentFacing === 'user' ? 'environment' : 'user';
+
+            // Stop current stream
+            const stream = this.video.srcObject;
+            if (stream) {
+              stream.getTracks().forEach((track) => track.stop());
+            }
+
+            // Start new stream
+            await this.startCamera();
+          } catch (error) {
+            console.error('Camera flip failed:', error);
+            this.updateStatus('Failed to flip camera', 'error');
+          }
+        }
+
+        updateStatus(message, type = 'loading') {
+          this.status.textContent = message;
+          this.status.className = type;
+        }
+
+        postMessage(type, data) {
+          // Send message to React Native WebView
+          if (window.ReactNativeWebView) {
+            window.ReactNativeWebView.postMessage(
+              JSON.stringify({
+                type,
+                data,
+                timestamp: Date.now(),
+              })
+            );
+          }
+        }
+      }
+
+      // Initialize the app when the page loads
+      window.addEventListener('load', () => {
+        new FaceDetectionApp();
+      });
+    </script>
+  </body>
+</html>

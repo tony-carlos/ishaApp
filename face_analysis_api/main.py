@@ -192,7 +192,7 @@ async def analyze_expression(file: UploadFile = File(...)):
 
 @app.post("/analyze/comprehensive", response_model=ComprehensiveAnalysisResponse)
 async def comprehensive_analysis(file: UploadFile = File(...)):
-    """Perform comprehensive face analysis including all features"""
+    """Perform comprehensive face analysis including all features - REQUIRES face detection"""
     try:
         if not file.content_type.startswith('image/'):
             raise HTTPException(status_code=400, detail="File must be an image")
@@ -201,9 +201,27 @@ async def comprehensive_analysis(file: UploadFile = File(...)):
         image = Image.open(io.BytesIO(contents))
         cv_image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
         
-        # Perform all analyses in parallel
+        # STEP 1: Detect face first - abort if no face detected
+        logger.info("Step 1: Detecting face...")
+        face_detection_result = await face_detection_service.detect_faces(cv_image)
+        
+        # Check if face was detected
+        if not face_detection_result.get('face_detection', {}).get('has_face', False):
+            logger.warning("No face detected - aborting comprehensive analysis")
+            raise HTTPException(
+                status_code=400, 
+                detail={
+                    "error": "No face detected",
+                    "message": "Please capture a clear image of your face for analysis. The image must contain a visible human face.",
+                    "face_detection": face_detection_result['face_detection']
+                }
+            )
+        
+        logger.info(f"Face detected with {face_detection_result['face_detection']['confidence']:.2%} confidence")
+        
+        # STEP 2: Perform all analyses in parallel (face already confirmed)
+        logger.info("Step 2: Performing comprehensive analysis...")
         tasks = [
-            face_detection_service.detect_faces(cv_image),
             skin_analysis_service.analyze_skin(cv_image),
             facial_features_service.analyze_features(cv_image),
             age_estimation_service.estimate_age(cv_image),
@@ -212,12 +230,13 @@ async def comprehensive_analysis(file: UploadFile = File(...)):
         
         results = await asyncio.gather(*tasks)
         
+        # STEP 3: Combine results
         comprehensive_result = {
-            "face_detection": results[0],
-            "skin_analysis": results[1],
-            "facial_features": results[2],
-            "age_estimation": results[3],
-            "expression_analysis": results[4],
+            "face_detection": face_detection_result,
+            "skin_analysis": results[0],
+            "facial_features": results[1],
+            "age_estimation": results[2],
+            "expression_analysis": results[3],
             "analysis_metadata": {
                 "timestamp": datetime.utcnow().isoformat(),
                 "image_size": {"width": image.width, "height": image.height},
@@ -225,8 +244,12 @@ async def comprehensive_analysis(file: UploadFile = File(...)):
             }
         }
         
+        logger.info("Comprehensive analysis completed successfully")
         return ComprehensiveAnalysisResponse(**comprehensive_result)
         
+    except HTTPException:
+        # Re-raise HTTP exceptions (like no face detected)
+        raise
     except Exception as e:
         logger.error(f"Comprehensive analysis error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Comprehensive analysis failed: {str(e)}")

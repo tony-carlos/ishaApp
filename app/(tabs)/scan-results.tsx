@@ -20,18 +20,18 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Colors } from '../../constants/Colors';
-import {
-  FaceAnalysisResult,
-  advancedFaceAnalysis,
-} from '../../services/AdvancedFaceAnalysis';
-import { FaceAnalysisResults } from '../../components/FaceAnalysisResults';
+import Colors from '@/constants/Colors';
+// import {
+//   FaceAnalysisResult,
+//   advancedFaceAnalysis,
+// } from '../../services/AdvancedFaceAnalysis';
+// import { FaceAnalysisResults } from '../../components/FaceAnalysisResults';
 
 const { width } = Dimensions.get('window');
 
 interface AnalysisHistory {
   id: string;
-  result: FaceAnalysisResult;
+  result: any; // FaceAnalysisResult type not available
   date: string;
   nickname?: string;
 }
@@ -43,8 +43,7 @@ export default function ScanResultsScreen() {
   const [analysisHistory, setAnalysisHistory] = useState<AnalysisHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedResult, setSelectedResult] =
-    useState<FaceAnalysisResult | null>(null);
+  const [selectedResult, setSelectedResult] = useState<any | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [filterType, setFilterType] = useState<FilterType>('all');
   const [sortType, setSortType] = useState<SortType>('date');
@@ -493,7 +492,7 @@ export default function ScanResultsScreen() {
     );
   };
 
-  const getTopConcerns = (result: FaceAnalysisResult) => {
+  const getTopConcerns = (result: any) => {
     const concerns: Array<{ name: string; score: number }> = [];
 
     if (result.skinAnalysis.hd) {
@@ -604,7 +603,7 @@ export default function ScanResultsScreen() {
       {renderComparisonView()}
 
       {/* Detail Modal */}
-      {selectedResult && (
+      {/* {selectedResult && (
         <FaceAnalysisResults
           result={selectedResult}
           visible={showDetailModal}
@@ -613,7 +612,7 @@ export default function ScanResultsScreen() {
             setSelectedResult(null);
           }}
         />
-      )}
+      )} */}
     </View>
   );
 }

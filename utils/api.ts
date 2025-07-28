@@ -53,15 +53,24 @@ class ApiService {
       const url = `${this.baseURL}${endpoint}`;
       const headers = await this.getHeaders(includeAuth);
 
+      // Create AbortController for timeout handling
+      const controller = new AbortController();
+      const timeoutId = setTimeout(
+        () => controller.abort(),
+        API_CONFIG.TIMEOUT
+      );
+
       const config: RequestInit = {
         ...options,
         headers: {
           ...headers,
           ...options.headers,
         },
+        signal: controller.signal,
       };
 
       const response = await fetch(url, config);
+      clearTimeout(timeoutId);
 
       // Check if response is ok before trying to parse JSON
       if (!response.ok) {
@@ -82,19 +91,27 @@ class ApiService {
     } catch (error: any) {
       console.error('API Request Error:', error);
 
+      // Handle timeout errors
+      if (error.name === 'AbortError') {
+        console.log('Request timed out, retrying...');
+        error.message = 'Request timed out';
+      }
+
       // Check if it's a network error and retry if configured
       if (
-        error.name === 'TypeError' &&
-        error.message.includes('Network request failed')
+        (error.name === 'TypeError' &&
+          error.message.includes('Network request failed')) ||
+        error.name === 'AbortError' ||
+        error.message.includes('timed out')
       ) {
-        if (retryCount < (API_CONFIG.RETRY_ATTEMPTS || 3)) {
+        if (retryCount < (API_CONFIG.RETRY_ATTEMPTS || 5)) {
           console.log(
             `Retrying request (${retryCount + 1}/${
-              API_CONFIG.RETRY_ATTEMPTS || 3
-            })...`
+              API_CONFIG.RETRY_ATTEMPTS || 5
+            })... Error: ${error.message}`
           );
           await new Promise((resolve) =>
-            setTimeout(resolve, API_CONFIG.RETRY_DELAY || 1000)
+            setTimeout(resolve, API_CONFIG.RETRY_DELAY || 2000)
           );
           return this.makeRequest(
             endpoint,

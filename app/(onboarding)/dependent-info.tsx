@@ -5,7 +5,7 @@ import Typography from '@/components/ui/Typography';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import Colors from '@/constants/Colors';
-import { User, ArrowRight } from 'lucide-react-native';
+import { User, ArrowRight } from '@/utils/icons';
 
 export default function DependentInfoScreen() {
   const router = useRouter();

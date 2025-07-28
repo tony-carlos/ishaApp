@@ -17,13 +17,13 @@ import {
   User,
   Settings,
   Camera,
+  ChevronRight,
   Calendar,
   Bell,
-  CircleHelp as HelpCircle,
-  LogOut,
-  ChevronRight,
+  HelpCircle,
   Shield,
-} from 'lucide-react-native';
+  LogOut,
+} from '@/utils/icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { getInitials } from '@/utils/helpers';

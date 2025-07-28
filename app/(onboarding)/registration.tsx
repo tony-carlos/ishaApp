@@ -21,7 +21,7 @@ import {
   Mail,
   Lock,
   Phone,
-} from 'lucide-react-native';
+} from '@/utils/icons';
 
 export default function RegistrationScreen() {
   const router = useRouter();

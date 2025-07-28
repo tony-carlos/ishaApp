@@ -67,43 +67,66 @@ export function SkinAnalysisProvider({ children }: { children: ReactNode }) {
   const addAnalysis = async (
     analysisData: Omit<SkinAnalysis, 'id' | 'userId'>
   ) => {
-    if (!user) throw new Error('User not authenticated');
+    if (!user) {
+      console.warn('User not authenticated, storing analysis locally only');
+    }
 
     try {
-      setIsLoading(true);
+      // Create a complete analysis object for local storage
+      const completeAnalysis: SkinAnalysis = {
+        id: `analysis_${Date.now()}`,
+        userId: user?.id || 'anonymous',
+        ...analysisData,
+      };
 
-      // Create FormData for image upload
-      const formData = new FormData();
-      formData.append('user_id', user.id);
-      formData.append('concerns', JSON.stringify(analysisData.concerns));
-      formData.append(
-        'recommendations',
-        JSON.stringify(analysisData.recommendations)
-      );
-      formData.append('overall_health', analysisData.overallHealth.toString());
+      // Add to local state immediately
+      setAnalyses((prev) => [completeAnalysis, ...prev]);
 
-      // If there's an image URL, we need to handle it differently
-      if (analysisData.imageUrl) {
-        // For now, we'll use the analyzeImage endpoint which handles image upload
-        // This is a simplified version - in production you'd handle the image properly
-        const response = await apiService.createSkinAnalysis({
-          user_id: user.id,
-          image_url: analysisData.imageUrl,
-          concerns: analysisData.concerns,
-          recommendations: analysisData.recommendations,
-          overall_health: analysisData.overallHealth,
-          analysis_date: new Date().toISOString(),
-        });
+      console.log('✅ Analysis added to local storage successfully');
 
-        if (response.success) {
-          await refreshAnalyses(); // Reload analyses from server
+      // Try to save to backend in the background (don't block on this)
+      if (user?.id) {
+        try {
+          // Prepare backend-compatible data structure
+          const backendData = {
+            user_id: user.id,
+            image_url: analysisData.imageUrl,
+            overall_health: analysisData.overallHealth,
+            analysis_date: analysisData.date,
+            // Convert concerns to JSON string for backend
+            concerns: JSON.stringify(analysisData.concerns || []),
+            // Convert recommendations to JSON string for backend
+            recommendations: JSON.stringify(analysisData.recommendations || []),
+            // Add optional comprehensive data as JSON
+            skin_type: (analysisData as any).skinType || null,
+            hd_analysis: JSON.stringify((analysisData as any).hdAnalysis || {}),
+            skin_tone: JSON.stringify((analysisData as any).skinTone || {}),
+            facial_features: JSON.stringify(
+              (analysisData as any).facialFeatures || {}
+            ),
+            age_estimation: JSON.stringify(
+              (analysisData as any).ageEstimation || {}
+            ),
+            expression_analysis: JSON.stringify(
+              (analysisData as any).expressionAnalysis || {}
+            ),
+          };
+
+          const response = await apiService.createSkinAnalysis(backendData);
+
+          if (response.success) {
+            console.log('✅ Analysis also saved to backend');
+          }
+        } catch (backendError) {
+          console.warn(
+            '⚠️ Failed to save to backend, but analysis is stored locally:',
+            backendError
+          );
         }
       }
     } catch (error) {
       console.error('Failed to add skin analysis:', error);
       throw new Error('Failed to add skin analysis');
-    } finally {
-      setIsLoading(false);
     }
   };
 

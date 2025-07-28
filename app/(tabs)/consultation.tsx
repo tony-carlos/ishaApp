@@ -3,15 +3,11 @@ import {
   StyleSheet,
   View,
   ScrollView,
-  FlatList,
   TouchableOpacity,
   Image,
   TextInput,
   KeyboardAvoidingView,
   Platform,
-  Keyboard,
-  Animated,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Typography from '@/components/ui/Typography';
@@ -19,304 +15,169 @@ import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Colors from '@/constants/Colors';
 import {
-  MessageCircle,
   Phone,
-  Video,
   Star,
+  Bot,
+  Video,
   Calendar,
   Clock,
   Send,
-  Bot,
-} from 'lucide-react-native';
+  X,
+} from '@/utils/icons';
 import { dermatologists, Dermatologist } from '@/assets/data/consultations';
 import { LinearGradient } from 'expo-linear-gradient';
-import { WebView } from 'react-native-webview';
+import { chatWithAI, Message } from '@/services/AzureAIService';
 import React from 'react';
 
-// Simple rule-based responses for skincare
-const getSkincareResponse = (prompt: string): string => {
-  const lowerPrompt = prompt.toLowerCase();
-
-  if (lowerPrompt.includes('acne') || lowerPrompt.includes('pimple')) {
-    return "For acne concerns, I recommend a gentle cleanser with salicylic acid or benzoyl peroxide. Keep your skin clean but don't over-wash, as this can stimulate more oil production.";
-  }
-
-  if (lowerPrompt.includes('dry') || lowerPrompt.includes('flaky')) {
-    return 'For dry skin, use a rich moisturizer with ingredients like hyaluronic acid, glycerin, and ceramides. Apply moisturizer while your skin is still slightly damp after cleansing.';
-  }
-
-  if (lowerPrompt.includes('wrinkle') || lowerPrompt.includes('aging')) {
-    return 'For anti-aging concerns, consider using products with retinol, vitamin C, and peptides. Always use sunscreen during the day to prevent further damage.';
-  }
-
-  if (lowerPrompt.includes('sensitive')) {
-    return 'For sensitive skin, look for fragrance-free products with soothing ingredients like aloe vera, chamomile, and green tea. Patch test new products before full application.';
-  }
-
-  return "I understand your skincare concern. Could you please provide more specific details about your skin type and the issues you're experiencing? This will help me give you more targeted advice.";
-};
-
 type ConsultationType = 'chat' | 'call' | 'video';
-
-interface ChatMessage {
-  id: string;
-  text: string;
-  sender: 'user' | 'ai';
-  timestamp: Date;
-}
 
 export default function ConsultationScreen() {
   const [consultationType, setConsultationType] =
     useState<ConsultationType>('chat');
-  const [showDeepSeekChat, setShowDeepSeekChat] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: '1',
-      text: 'Hello! I am Isher Care AI assistant. How can I help with your skincare routine or beauty questions today?',
-      sender: 'ai',
-      timestamp: new Date(),
-    },
-  ]);
-  const [inputMessage, setInputMessage] = useState('');
+  const [showChat, setShowChat] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
 
-  const callDeepSeekAPI = async (prompt: string) => {
+  const sendMessage = async () => {
+    if (!inputText.trim() || isLoading) return;
+
+    const userMessage: Message = {
+      role: 'user',
+      content: inputText.trim(),
+    };
+
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
+    setInputText('');
     setIsLoading(true);
 
     try {
-      // Use rule-based responses
-      const response = getSkincareResponse(prompt);
-      return response;
+      const response = await chatWithAI(newMessages);
+      const aiMessage: Message = {
+        role: 'assistant',
+        content: response || 'Sorry, I could not generate a response.',
+      };
+      setMessages([...newMessages, aiMessage]);
     } catch (error) {
-      console.error('Error generating response:', error);
-      throw error;
+      console.error('Chat error:', error);
+      const errorMessage: Message = {
+        role: 'assistant',
+        content: 'Sorry, there was an error. Please try again.',
+      };
+      setMessages([...newMessages, errorMessage]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSendMessage = async () => {
-    if (inputMessage.trim() === '' || isLoading) return;
-
-    // Add user message
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      text: inputMessage,
-      sender: 'user',
-      timestamp: new Date(),
-    };
-
-    setMessages((prevMessages) => [...prevMessages, userMessage]);
-    const userQuery = inputMessage;
-    setInputMessage('');
-
-    try {
-      // Call the DeepSeek API
-      const aiResponseText = await callDeepSeekAPI(userQuery);
-
-      const aiResponse: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        text: aiResponseText,
-        sender: 'ai',
-        timestamp: new Date(),
-      };
-
-      setMessages((prevMessages) => [...prevMessages, aiResponse]);
-    } catch (error) {
-      // Add error message from AI
-      const errorMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        text: "I apologize, but I'm having trouble connecting to my knowledge base right now. Please try again in a moment.",
-        sender: 'ai',
-        timestamp: new Date(),
-      };
-      setMessages((prevMessages) => [...prevMessages, errorMessage]);
+  const openChat = () => {
+    setShowChat(true);
+    if (messages.length === 0) {
+      setMessages([
+        {
+          role: 'assistant',
+          content:
+            "Hello! I'm your AI skincare assistant. How can I help you today?",
+        },
+      ]);
     }
-
-    scrollViewRef.current?.scrollToEnd({ animated: true });
   };
 
-  const DeepSeekChat = () => {
-    const [keyboardVisible, setKeyboardVisible] = useState(false);
-    const [inputHeight, setInputHeight] = useState(60);
-    const animatedInputBottom = useRef(new Animated.Value(0)).current;
+  const closeChat = () => {
+    setShowChat(false);
+  };
 
-    useEffect(() => {
-      const keyboardWillShowListener = Keyboard.addListener(
-        Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
-        (e) => {
-          setKeyboardVisible(true);
-          Animated.timing(animatedInputBottom, {
-            toValue: e.endCoordinates.height,
-            duration: 250,
-            useNativeDriver: false,
-          }).start();
-          scrollViewRef.current?.scrollToEnd({ animated: true });
-        }
-      );
-
-      const keyboardWillHideListener = Keyboard.addListener(
-        Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
-        () => {
-          setKeyboardVisible(false);
-          Animated.timing(animatedInputBottom, {
-            toValue: 0,
-            duration: 250,
-            useNativeDriver: false,
-          }).start();
-        }
-      );
-
-      return () => {
-        keyboardWillShowListener.remove();
-        keyboardWillHideListener.remove();
-      };
-    }, []);
-
-    // Auto-scroll when messages change
-    useEffect(() => {
-      setTimeout(() => {
-        scrollViewRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-    }, [messages]);
-
-    const onContentSizeChange = () => {
-      scrollViewRef.current?.scrollToEnd({ animated: true });
-    };
-
-    const onInputSizeChange = (event: {
-      nativeEvent: { contentSize: { height: number } };
-    }) => {
-      const height = Math.min(
-        100,
-        Math.max(60, event.nativeEvent.contentSize.height)
-      );
-      setInputHeight(height);
-    };
-
-    const handleSubmit = () => {
-      if (inputMessage.trim().length > 0 && !isLoading) {
-        handleSendMessage();
-      }
-    };
-
+  // Simple Chat Interface
+  if (showChat) {
     return (
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-      >
-        <View style={styles.deepSeekContainer}>
-          <View style={styles.deepSeekHeader}>
-            <View style={styles.deepSeekAvatarContainer}>
-              <Bot size={24} color={Colors.neutral.white} />
-            </View>
-            <Typography variant="h4" style={styles.deepSeekTitle}>
-              Isher Care
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <KeyboardAvoidingView
+          style={styles.chatContainer}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          {/* Chat Header */}
+          <View style={styles.chatHeader}>
+            <TouchableOpacity onPress={closeChat} style={styles.closeBtn}>
+              <X size={24} color={Colors.neutral.white} />
+            </TouchableOpacity>
+            <Typography variant="h3" style={styles.chatTitle}>
+              AI Assistant
             </Typography>
           </View>
 
+          {/* Messages */}
           <ScrollView
             ref={scrollViewRef}
-            style={styles.chatContainer}
-            contentContainerStyle={styles.chatContent}
-            showsVerticalScrollIndicator={false}
-            onContentSizeChange={onContentSizeChange}
-            keyboardShouldPersistTaps="always"
+            style={styles.messagesArea}
+            contentContainerStyle={styles.messagesContent}
+            onContentSizeChange={() => scrollViewRef.current?.scrollToEnd()}
           >
-            {messages.map((message, index) => (
+            {messages.map((msg, index) => (
               <View
-                key={message.id}
+                key={index}
                 style={[
-                  styles.messageBubble,
-                  message.sender === 'user'
-                    ? styles.userMessage
-                    : styles.aiMessage,
-                  index > 0 && messages[index - 1].sender === message.sender
-                    ? styles.consecutiveMessage
-                    : {},
+                  styles.messageRow,
+                  msg.role === 'user' ? styles.userRow : styles.aiRow,
                 ]}
               >
-                {message.sender === 'ai' && index === 0 ? (
-                  <View style={styles.aiHeaderBubble}>
-                    <Bot
-                      size={20}
-                      color="#5D3617"
-                      style={styles.aiHeaderIcon}
-                    />
-                    <Typography variant="bodySmall" style={styles.aiHeaderText}>
-                      Isher Care
-                    </Typography>
-                  </View>
-                ) : null}
-
-                <Typography
-                  variant="body"
-                  style={styles.messageText}
-                  color={
-                    message.sender === 'user'
-                      ? Colors.neutral.white
-                      : Colors.text.primary
-                  }
+                <View
+                  style={[
+                    styles.messageBubble,
+                    msg.role === 'user' ? styles.userBubble : styles.aiBubble,
+                  ]}
                 >
-                  {message.text}
-                </Typography>
-                <Typography
-                  variant="caption"
-                  style={styles.messageTime}
-                  color={
-                    message.sender === 'user'
-                      ? Colors.neutral.white
-                      : Colors.text.tertiary
-                  }
-                >
-                  {message.timestamp.toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </Typography>
+                  <Typography
+                    variant="body"
+                    color={
+                      msg.role === 'user'
+                        ? Colors.neutral.white
+                        : Colors.text.primary
+                    }
+                  >
+                    {msg.content}
+                  </Typography>
+                </View>
               </View>
             ))}
+            {isLoading && (
+              <View style={[styles.messageRow, styles.aiRow]}>
+                <View style={[styles.messageBubble, styles.aiBubble]}>
+                  <Typography variant="body" color={Colors.text.secondary}>
+                    Typing...
+                  </Typography>
+                </View>
+              </View>
+            )}
           </ScrollView>
 
-          <View style={styles.inputOuterContainer}>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={[styles.textInput, { height: inputHeight }]}
-                placeholder="Ask Isher Care about skin care..."
-                value={inputMessage}
-                onChangeText={setInputMessage}
-                multiline
-                onContentSizeChange={onInputSizeChange}
-                returnKeyType="send"
-                blurOnSubmit={false}
-                onSubmitEditing={handleSubmit}
-                keyboardType="default"
-                autoCapitalize="sentences"
-              />
-              {isLoading ? (
-                <View style={styles.sendButton}>
-                  <ActivityIndicator size="small" color="white" />
-                </View>
-              ) : (
-                <TouchableOpacity
-                  style={[
-                    styles.sendButton,
-                    { opacity: inputMessage.trim() ? 1 : 0.5 },
-                  ]}
-                  onPress={handleSubmit}
-                  disabled={!inputMessage.trim() || isLoading}
-                >
-                  <Send size={20} color="white" />
-                </TouchableOpacity>
-              )}
-            </View>
+          {/* Input Area */}
+          <View style={styles.inputArea}>
+            <TextInput
+              style={styles.textInput}
+              value={inputText}
+              onChangeText={setInputText}
+              placeholder="Type your message..."
+              multiline
+              maxLength={500}
+              editable={!isLoading}
+            />
+            <TouchableOpacity
+              style={[
+                styles.sendBtn,
+                { opacity: inputText.trim() && !isLoading ? 1 : 0.5 },
+              ]}
+              onPress={sendMessage}
+              disabled={!inputText.trim() || isLoading}
+            >
+              <Send size={20} color={Colors.neutral.white} />
+            </TouchableOpacity>
           </View>
-        </View>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     );
-  };
+  }
 
   const renderConsultationOption = (
     type: ConsultationType,
@@ -350,9 +211,7 @@ export default function ConsultationScreen() {
         onPress={() => {
           setConsultationType(type);
           if (type === 'chat') {
-            setShowDeepSeekChat(true);
-          } else {
-            setShowDeepSeekChat(false);
+            openChat();
           }
         }}
       >
@@ -363,9 +222,6 @@ export default function ConsultationScreen() {
             { backgroundColor: bgColor },
           ]}
         >
-          {/* {React.cloneElement(icon as React.ReactElement, { 
-            color: textColor 
-          })} */}
           {icon}
         </View>
         <Typography
@@ -406,11 +262,7 @@ export default function ConsultationScreen() {
 
           <View style={styles.dermatologistStats}>
             <View style={styles.ratingContainer}>
-              <Star
-                size={16}
-                color={Colors.warning.default}
-                fill={Colors.warning.default}
-              />
+              <Star size={16} color={Colors.warning.default} />
               <Typography variant="caption" style={styles.ratingText}>
                 {item.rating.toFixed(1)}
               </Typography>
@@ -470,72 +322,83 @@ export default function ConsultationScreen() {
         style={styles.headerGradient}
       />
 
-      {showDeepSeekChat && consultationType === 'chat' ? (
-        <DeepSeekChat />
-      ) : (
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <View style={styles.header}>
-            <Typography variant="h2">Consultation</Typography>
-            <Typography variant="body" style={styles.headerSubtitle}>
-              Get expert advice from dermatologists
-            </Typography>
-          </View>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+          <Typography variant="h2">Consultation</Typography>
+          <Typography variant="body" style={styles.headerSubtitle}>
+            Get expert advice from dermatologists
+          </Typography>
+        </View>
 
-          <View style={styles.consultationTypes}>
-            {renderConsultationOption(
-              'chat',
-              'Skin AI',
-              <Bot
-                size={24}
-                color={
-                  consultationType === 'chat'
-                    ? '#8B4513'
-                    : Colors.text.secondary
-                }
-              />
-            )}
-            {renderConsultationOption(
-              'call',
-              'Voice Call',
-              <Phone
-                size={24}
-                color={
-                  consultationType === 'call'
-                    ? Colors.primary.default
-                    : Colors.text.secondary
-                }
-              />
-            )}
-            {renderConsultationOption(
-              'video',
-              'Video Call',
-              <Video
-                size={24}
-                color={
-                  consultationType === 'video'
-                    ? Colors.primary.default
-                    : Colors.text.secondary
-                }
-              />
-            )}
-          </View>
+        <View style={styles.consultationTypes}>
+          {renderConsultationOption(
+            'chat',
+            'AI Chat',
+            <Bot
+              size={24}
+              color={
+                consultationType === 'chat'
+                  ? Colors.primary.default
+                  : Colors.text.secondary
+              }
+            />
+          )}
+          {renderConsultationOption(
+            'call',
+            'Voice Call',
+            <Phone
+              size={24}
+              color={
+                consultationType === 'call'
+                  ? Colors.primary.default
+                  : Colors.text.secondary
+              }
+            />
+          )}
+          {renderConsultationOption(
+            'video',
+            'Video Call',
+            <Video
+              size={24}
+              color={
+                consultationType === 'video'
+                  ? Colors.primary.default
+                  : Colors.text.secondary
+              }
+            />
+          )}
+        </View>
 
-          <View style={styles.content}>
-            <Typography variant="h3" style={styles.sectionTitle}>
-              Available Specialists
-            </Typography>
-
-            {dermatologists.map((dermatologist) => (
-              <View
-                key={dermatologist.id}
-                style={styles.dermatologistContainer}
-              >
-                {renderDermatologistCard({ item: dermatologist })}
-              </View>
-            ))}
-          </View>
-        </ScrollView>
-      )}
+        <View style={styles.content}>
+          {consultationType === 'chat' ? (
+            <View style={styles.emptyState}>
+              <Typography variant="h3" style={styles.emptyStateTitle}>
+                AI Skincare Assistant
+              </Typography>
+              <Typography variant="body" style={styles.emptyStateText}>
+                Chat with our AI assistant about skincare, products, routines,
+                and get personalized advice.
+              </Typography>
+              <Button
+                label="Start Chat"
+                variant="primary"
+                size="lg"
+                onPress={openChat}
+                style={{ marginTop: 24 }}
+              />
+            </View>
+          ) : (
+            <View style={styles.emptyState}>
+              <Typography variant="h3" style={styles.emptyStateTitle}>
+                Consultation
+              </Typography>
+              <Typography variant="body" style={styles.emptyStateText}>
+                Choose your consultation type to get started.
+              </Typography>
+            </View>
+          )}
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -671,149 +534,97 @@ const styles = StyleSheet.create({
   consultButton: {
     marginTop: 8,
   },
-  deepSeekContainer: {
-    flex: 1,
-    backgroundColor: '#FAF3E3',
-  },
-  deepSeekHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
-    backgroundColor: '#8B4513',
-    borderBottomWidth: 1,
-    borderBottomColor: '#A47551',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  deepSeekAvatarContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#5D3617',
+  emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 2,
+    paddingHorizontal: 24,
+    paddingVertical: 60,
   },
-  deepSeekTitle: {
-    color: Colors.neutral.white,
-    fontWeight: '600',
+  emptyStateTitle: {
+    marginTop: 24,
+    marginBottom: 12,
+    textAlign: 'center',
   },
+  emptyStateText: {
+    textAlign: 'center',
+    marginBottom: 32,
+    opacity: 0.8,
+  },
+  // Chat Styles
   chatContainer: {
     flex: 1,
-    backgroundColor: '#FAF3E3',
   },
-  chatContent: {
+  chatHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.primary.default,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    paddingTop: 20,
+  },
+  closeBtn: {
+    padding: 8,
+    marginRight: 12,
+  },
+  chatTitle: {
+    color: Colors.neutral.white,
+    flex: 1,
+  },
+  messagesArea: {
+    flex: 1,
+    backgroundColor: Colors.background.primary,
+  },
+  messagesContent: {
     padding: 16,
-    paddingBottom: 120,
+    paddingBottom: 100,
+  },
+  messageRow: {
+    marginBottom: 12,
+  },
+  userRow: {
+    alignItems: 'flex-end',
+  },
+  aiRow: {
+    alignItems: 'flex-start',
   },
   messageBubble: {
     maxWidth: '80%',
     padding: 12,
     borderRadius: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
-    elevation: 1,
   },
-  userMessage: {
-    alignSelf: 'flex-end',
-    backgroundColor: '#8B4513',
+  userBubble: {
+    backgroundColor: Colors.primary.default,
     borderTopRightRadius: 4,
   },
-  aiMessage: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#D2B48C',
-    borderBottomLeftRadius: 4,
+  aiBubble: {
+    backgroundColor: Colors.background.secondary,
+    borderTopLeftRadius: 4,
   },
-  consecutiveMessage: {
-    marginTop: -4,
-  },
-  messageText: {
-    marginBottom: 4,
-    lineHeight: 20,
-  },
-  messageTime: {
-    alignSelf: 'flex-end',
-    fontSize: 10,
-    opacity: 0.7,
-  },
-  aiHeaderBubble: {
+  inputArea: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-    backgroundColor: '#E6D2B5',
-    padding: 8,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
-  },
-  aiHeaderIcon: {
-    marginRight: 8,
-  },
-  aiHeaderText: {
-    fontWeight: '500',
-    color: '#5D3617',
-  },
-  inputOuterContainer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: '#FAF3E3',
+    padding: 16,
+    backgroundColor: Colors.background.primary,
     borderTopWidth: 1,
-    borderTopColor: '#D2B48C',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
-    zIndex: 100,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#FAF3E3',
+    borderTopColor: Colors.neutral.light,
+    alignItems: 'flex-end',
   },
   textInput: {
     flex: 1,
-    backgroundColor: Colors.neutral.white,
+    borderWidth: 1,
+    borderColor: Colors.neutral.light,
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 10,
     maxHeight: 100,
-    borderWidth: 1,
-    borderColor: '#D2B48C',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
-    elevation: 1,
+    marginRight: 12,
+    backgroundColor: Colors.background.secondary,
   },
-  sendButton: {
-    marginLeft: 12,
+  sendBtn: {
+    backgroundColor: Colors.primary.default,
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#8B4513',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1,
-    elevation: 2,
   },
 });

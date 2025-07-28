@@ -11,12 +11,7 @@ import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Colors from '@/constants/Colors';
 import { useRouter } from 'expo-router';
-import {
-  ScanSearch,
-  ShoppingBag,
-  MessageSquare,
-  Gamepad2,
-} from 'lucide-react-native';
+import { Search, Shop, Consultation, Game } from '@/utils/icons';
 
 const services = [
   {
@@ -24,28 +19,28 @@ const services = [
     title: 'Face Scanning',
     description:
       'Analyze your skin with AI technology for personalized recommendations',
-    icon: <ScanSearch size={28} color={Colors.primary.dark} />,
+    icon: <Search size={28} color={Colors.primary.dark} />,
     image: 'https://images.pexels.com/photos/3373716/pexels-photo-3373716.jpeg',
   },
   {
     id: 'ordering',
     title: 'Ordering Site',
     description: 'Shop for recommended products tailored to your skin needs',
-    icon: <ShoppingBag size={28} color={Colors.primary.dark} />,
+    icon: <Shop size={28} color={Colors.primary.dark} />,
     image: 'https://images.pexels.com/photos/3785147/pexels-photo-3785147.jpeg',
   },
   {
     id: 'consultation',
     title: 'Skincare Consultation',
     description: 'Chat with dermatologists for professional advice',
-    icon: <MessageSquare size={28} color={Colors.primary.dark} />,
+    icon: <Consultation size={28} color={Colors.primary.dark} />,
     image: 'https://images.pexels.com/photos/7089401/pexels-photo-7089401.jpeg',
   },
   {
     id: 'game',
     title: 'Refreshing Game',
     description: 'Have fun while learning about skincare',
-    icon: <Gamepad2 size={28} color={Colors.primary.dark} />,
+    icon: <Game size={28} color={Colors.primary.dark} />,
     image: 'https://images.pexels.com/photos/3951355/pexels-photo-3951355.jpeg',
   },
 ];

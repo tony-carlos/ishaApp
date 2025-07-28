@@ -15,16 +15,7 @@ import Card from '@/components/ui/Card';
 import Colors from '@/constants/Colors';
 import { useUser } from '@/contexts/UserContext';
 import { useSkinAnalysis } from '@/contexts/SkinAnalysisContext';
-import {
-  CircleSlash,
-  Camera,
-  Droplets,
-  Clock,
-  CircleAlert as AlertCircle,
-  TrendingUp,
-  Sun,
-  Moon,
-} from 'lucide-react-native';
+import { Camera, Alert, TrendingUp, Info, RotateCw } from '@/utils/icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { dailySkinTips } from '@/assets/data/skinTips';
 import { formatDate } from '@/utils/helpers';
@@ -207,7 +198,7 @@ export default function HomeScreen() {
       >
         <View style={styles.tipHeader}>
           <View style={styles.tipTitleContainer}>
-            <Droplets size={24} color={Colors.primary.default} />
+            <Info size={24} color={Colors.primary.default} />
             <Typography variant="h4" style={styles.tipHeaderTitle}>
               Daily Skincare Tip
             </Typography>
@@ -241,7 +232,7 @@ export default function HomeScreen() {
     <Card style={styles.routineCard} elevation={2}>
       <View style={styles.routineHeader}>
         <View style={styles.routineTitleContainer}>
-          <Clock size={24} color={Colors.primary.default} />
+          <Info size={24} color={Colors.primary.default} />
           <Typography variant="h4" style={styles.routineTitle}>
             Today's Routine
           </Typography>
@@ -256,7 +247,7 @@ export default function HomeScreen() {
       <View style={styles.routineContent}>
         <View style={styles.routineSection}>
           <View style={styles.routineTimeHeader}>
-            <Sun size={20} color={Colors.warning.default} />
+            <Info size={20} color={Colors.warning.default} />
             <Typography variant="bodySmall" style={styles.routineTime}>
               MORNING ROUTINE
             </Typography>
@@ -299,7 +290,7 @@ export default function HomeScreen() {
 
         <View style={styles.routineSection}>
           <View style={styles.routineTimeHeader}>
-            <Moon size={20} color={Colors.neutral.dark} />
+            <Info size={20} color={Colors.neutral.dark} />
             <Typography variant="bodySmall" style={styles.routineTime}>
               EVENING ROUTINE
             </Typography>

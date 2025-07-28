@@ -51,6 +51,31 @@ export interface SkinAnalysis {
   concerns: SkinConcern[];
   recommendations: Recommendation[];
   overallHealth: number; // 0-100 score
+  // Comprehensive analysis data
+  hdAnalysis?: {
+    redness: number;
+    oiliness: number;
+    ageSpots: number;
+    radiance: number;
+    moisture: number;
+    darkCircles: number;
+    eyeBags: number;
+    firmness: number;
+    texture: number;
+    acne: number;
+    pores: number;
+    wrinkles: number;
+  };
+  skinType?: string;
+  skinTone?: {
+    category: string;
+    hex: string;
+    rgb: { r: number; g: number; b: number };
+    undertone: string;
+  };
+  facialFeatures?: any;
+  ageEstimation?: any;
+  expressionAnalysis?: any;
 }
 
 export interface Product {

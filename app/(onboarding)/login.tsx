@@ -14,7 +14,7 @@ import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import Colors from '@/constants/Colors';
 import { useUser } from '@/contexts/UserContext';
-import { Mail, Lock, ArrowRight } from 'lucide-react-native';
+import { Mail, Lock, ArrowRight } from '@/utils/icons';
 
 export default function LoginScreen() {
   const router = useRouter();

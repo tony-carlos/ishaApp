@@ -12,13 +12,7 @@ import Typography from '@/components/ui/Typography';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Colors from '@/constants/Colors';
-import {
-  Play,
-  CirclePause as PauseCircle,
-  RotateCcw,
-  Trophy,
-  CircleHelp as HelpCircle,
-} from 'lucide-react-native';
+import { Play, Pause, RotateCw, Info, HelpCircle, Trophy, PauseCircle } from '@/utils/icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');

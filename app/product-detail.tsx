@@ -17,13 +17,13 @@ import Colors from '@/constants/Colors';
 import {
   ArrowLeft,
   Star,
-  ShoppingBag,
+  Shop,
   Heart,
   Share,
   Plus,
   Minus,
   Info,
-} from 'lucide-react-native';
+} from '@/utils/icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCart } from '@/contexts/CartContext';
 

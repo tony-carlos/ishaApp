@@ -1,13 +1,7 @@
 import { Tabs } from 'expo-router';
 import { Platform } from 'react-native';
 import Colors from '@/constants/Colors';
-import {
-  Chrome as Home,
-  ShoppingBag,
-  MessageSquare,
-  Gamepad2,
-  User,
-} from 'lucide-react-native';
+import { Home, Shop, Consultation, Game, Profile } from '@/utils/icons';
 
 export default function TabLayout() {
   return (
@@ -61,11 +55,7 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color, focused }) => (
-            <Home
-              size={focused ? 32 : 28}
-              color={color}
-              strokeWidth={focused ? 2.5 : 2}
-            />
+            <Home size={focused ? 32 : 28} color={color} />
           ),
         }}
       />
@@ -74,11 +64,7 @@ export default function TabLayout() {
         options={{
           title: 'Shop',
           tabBarIcon: ({ color, focused }) => (
-            <ShoppingBag
-              size={focused ? 32 : 28}
-              color={color}
-              strokeWidth={focused ? 2.5 : 2}
-            />
+            <Shop size={focused ? 32 : 28} color={color} />
           ),
         }}
       />
@@ -87,11 +73,7 @@ export default function TabLayout() {
         options={{
           title: 'Consult',
           tabBarIcon: ({ color, focused }) => (
-            <MessageSquare
-              size={focused ? 32 : 28}
-              color={color}
-              strokeWidth={focused ? 2.5 : 2}
-            />
+            <Consultation size={focused ? 32 : 28} color={color} />
           ),
         }}
       />
@@ -100,11 +82,7 @@ export default function TabLayout() {
         options={{
           title: 'Game',
           tabBarIcon: ({ color, focused }) => (
-            <Gamepad2
-              size={focused ? 32 : 28}
-              color={color}
-              strokeWidth={focused ? 2.5 : 2}
-            />
+            <Game size={focused ? 32 : 28} color={color} />
           ),
         }}
       />
@@ -113,11 +91,7 @@ export default function TabLayout() {
         options={{
           title: 'Profile',
           tabBarIcon: ({ color, focused }) => (
-            <User
-              size={focused ? 32 : 28}
-              color={color}
-              strokeWidth={focused ? 2.5 : 2}
-            />
+            <Profile size={focused ? 32 : 28} color={color} />
           ),
         }}
       />

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, View, Modal, FlatList, TouchableOpacity, TextInput } from 'react-native';
 import Typography from './Typography';
 import Colors from '@/constants/Colors';
-import { Search, ChevronDown } from 'lucide-react-native';
+import { Search, ChevronDown } from '@/utils/icons';
 import { CountryCode, countryCodes } from '@/utils/countryData';
 
 interface CountryCodePickerProps {

@@ -1,9 +1,15 @@
-import { StyleSheet, View, TouchableOpacity, Image, ImageSourcePropType } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  Image,
+  ImageSourcePropType,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Typography from './Typography';
 import Colors from '@/constants/Colors';
 import Layout from '@/constants/Layout';
-import { Check } from 'lucide-react-native';
+import { Check } from '@/utils/icons';
 
 interface SkinConcernCardProps {
   title: string;
@@ -26,29 +32,29 @@ export default function SkinConcernCard({
       activeOpacity={0.9}
       onPress={onSelect}
     >
-      <Image 
-        source={imageUrl} 
-        style={styles.image} 
-        resizeMode="cover"
-      />
-      
+      <Image source={imageUrl} style={styles.image} resizeMode="cover" />
+
       <LinearGradient
         colors={['transparent', 'rgba(0,0,0,0.7)']}
         style={styles.gradient}
       />
-      
+
       <View style={styles.content}>
-        <Typography variant="h4" color={Colors.neutral.white} style={styles.title}>
+        <Typography
+          variant="h4"
+          color={Colors.neutral.white}
+          style={styles.title}
+        >
           {title}
         </Typography>
-        
+
         {description && (
           <Typography variant="caption" color={Colors.neutral.white}>
             {description}
           </Typography>
         )}
       </View>
-      
+
       {selected && (
         <View style={styles.selectedIndicator}>
           <Check size={18} color={Colors.neutral.white} />
